@@ -19,10 +19,10 @@ module panda_alu_tb ();
     .result_o   (result_o   )
   );
 
-  bit [0:5][31:0] list_a = {
+  bit [0:5][31:0] list_a = '{
     30, 30, -62, -35, -134, -12
   };
-  bit [0:5][31:0] list_b = {
+  bit [0:5][31:0] list_b = '{
     3, 50, 5, -97, -90, -12
   };
 
