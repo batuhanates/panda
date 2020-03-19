@@ -19,42 +19,27 @@ module panda_alu_tb ();
     .result_o   (result_o   )
   );
 
+  bit [0:5][31:0] list_a = {
+    30, 30, -62, -35, -134, -12
+  };
+  bit [0:5][31:0] list_b = {
+    3, 50, 5, -97, -90, -12
+  };
+
   initial begin : proc_stim
-    operand_a_i = 20;
-    operand_b_i = 7;
-    operator_i = operator_i.first;
-    for (int i = 0; i < 13; i++) begin
-      #10 operator_i = operator_i.next;
-    end
-
-    operand_b_i = 50;
-    operator_i = operator_i.first;
-    for (int i = 0; i < 13; i++) begin
-      #10 operator_i = operator_i.next;
-    end
-
-    operand_a_i = -62;
-    operator_i = operator_i.first;
-    for (int i = 0; i < 13; i++) begin
-      #10 operator_i = operator_i.next;
-    end
-
-    operand_b_i = -90;
-    operator_i = operator_i.first;
-    for (int i = 0; i < 13; i++) begin
-      #10 operator_i = operator_i.next;
-    end
-
-    operand_a_i = -134;
-    operator_i = operator_i.first;
-    for (int i = 0; i < 13; i++) begin
-      #10 operator_i = operator_i.next;
-    end
-
-    operand_b_i = -134;
-    operator_i = operator_i.first;
-    for (int i = 0; i < 13; i++) begin
-      #10 operator_i = operator_i.next;
+    operator_i = operator_i.last();
+    operand_a_i = 0;
+    operand_b_i = 0;
+    for (int i = 0; i < 6; i++) begin
+      for (int k = 0; k < 14; k++) begin
+        #5 operator_i = operator_i.next();
+        operand_a_i = list_a[i];
+        operand_b_i = list_b[i];
+        #5 $display("Operator=%s", operator_i.name());
+        $display("A=%d, %d, %b", $signed(operand_a_i), operand_a_i, operand_a_i);
+        $display("B=%d, %d, %b", $signed(operand_b_i), operand_b_i, operand_b_i);
+        $display("R=%d, %d, %b", $signed(result_o), result_o, result_o);
+      end
     end
     $finish;
   end
