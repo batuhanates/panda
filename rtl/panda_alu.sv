@@ -12,8 +12,8 @@ module panda_alu (
 
   // Adder
   logic        adder_sub;
-  logic [32:0] adder_operand_a;
-  logic [32:0] adder_operand_b;
+  logic [32:0] adder_in_a;
+  logic [32:0] adder_in_b;
   logic [32:0] adder_result_ext;
   logic [31:0] adder_result;
 
@@ -78,20 +78,31 @@ module panda_alu (
   logic        shift_left;
   logic        shift_arithmetic;
   logic [ 4:0] shift_amount;
+  logic [31:0] operand_a_rev;
   logic [32:0] shift_operand;
   logic [32:0] shift_result_ext;
   logic [31:0] shift_result;
+  logic [31:0] shift_result_rev;
+
+  for (genvar i = 0; i < 32; i++) begin
+    assign operand_a_rev[i] = operand_a_i[31-i];
+  end
 
   assign shift_left          = operator_i == ALU_SLL;
   assign shift_arithmetic    = operator_i == ALU_SRA;
-  assign shift_operand[31:0] = shift_left ? operand_a_i : {<<{operand_a_i}};
+  assign shift_operand[31:0] = shift_left ? operand_a_rev : operand_a_i;
   assign shift_operand[32]   = shift_arithmetic ? shift_operand[31] : 1'b0;
   assign shift_amount        = operand_b_i[4:0];
-  assign shift_result_ext    = shift_operand >>> shift_amount;
+  assign shift_result_ext    = $signed(shift_operand) >>> shift_amount;
   assign shift_result        = shift_result_ext[31:0];
+
+  for (genvar i = 0; i < 32; i++) begin
+    assign shift_result_rev[i] = shift_result[31-i];
+  end
 
   // Result Output
   always_comb begin
+    result_o = '0;
     unique case (operator_i)
       ALU_ADD,
       ALU_SUB : result_o = adder_result;
@@ -100,7 +111,7 @@ module panda_alu (
       ALU_OR  : result_o = operand_a_i | operand_b_i;
       ALU_XOR : result_o = operand_a_i ^ operand_b_i;
 
-      ALU_SLL,
+      ALU_SLL : result_o = shift_result_rev;
       ALU_SRL,
       ALU_SRA : result_o = shift_result;
 
