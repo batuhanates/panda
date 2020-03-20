@@ -1,6 +1,6 @@
-// Panda Core
-// Batuhan Ates
-// https://github.com/batuhanates
+// Copyright 2020 Batuhan Ates
+// Licensed under the Apache License, Version 2.0, see LICENSE for details.
+// Panda Core <https://github.com/batuhanates/panda>
 
 module panda_alu (
   input  panda_pkg::alu_operator_e operator_i,
