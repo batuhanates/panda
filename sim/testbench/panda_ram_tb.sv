@@ -35,7 +35,9 @@ module panda_ram_tb ();
     addr_i = 5'd0;
     data_i = 32'b0;
     #10 ce_i = 1'b1;
-    for (int i = 0; i < 20; i++) begin
+    #10 $monitor("addr_i:0x%h",  addr_i);
+    $monitor("data_o:0x%h", data_o);
+    for (int i = 0; i < 36; i++) begin
       #10 addr_i = i;
     end
     #10 addr_i = 40;
