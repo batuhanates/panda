@@ -123,7 +123,7 @@ module panda_alu #(
       ALU_LT,
       ALU_LTU,
       ALU_GE,
-      ALU_GEU : result_o = {{Width{1'b0}}, cmp_result};
+      ALU_GEU : result_o = {{Width-1{1'b0}}, cmp_result};
 
       default : ;
     endcase
