@@ -19,12 +19,12 @@ module panda_comparator_sub_tb ();
   panda_comparator_sub #(
     .Width(Width)
   ) dut (
-    .operand_a_i (operand_a ),
-    .operand_b_i (operand_b ),
-    .sub_result_i(sub_result),
-    .sign_i      (sign      ),
-    .is_equal_o  (is_equal  ),
-    .is_less_o   (is_less   )
+    .sub_result_i(sub_result        ),
+    .msb_a_i     (operand_a[Width-1]),
+    .msb_b_i     (operand_b[Width-1]),
+    .sign_i      (sign              ),
+    .is_equal_o  (is_equal          ),
+    .is_less_o   (is_less           )
   );
 
   panda_adder #(

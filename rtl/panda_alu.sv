@@ -61,12 +61,12 @@ module panda_alu #(
   panda_comparator_sub #(
     .Width(Width)
   ) i_comparator (
-    .operand_a_i (operand_a_i ),
-    .operand_b_i (operand_b_i ),
-    .sub_result_i(adder_result),
-    .sign_i      (cmp_signed  ),
-    .is_equal_o  (is_equal    ),
-    .is_less_o   (is_less     )
+    .sub_result_i(adder_result        ),
+    .msb_a_i     (operand_a_i[Width-1]),
+    .msb_b_i     (operand_b_i[Width-1]),
+    .sign_i      (cmp_signed          ),
+    .is_equal_o  (is_equal            ),
+    .is_less_o   (is_less             )
   );
 
   always_comb begin
