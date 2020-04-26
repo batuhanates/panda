@@ -28,8 +28,7 @@ module panda_shifter #(
   // Extend the operand with either MSB of operand for arithmetic shift
   // or 0 for logic shift then do arithmetic shift. This allows a single
   // shifter hardware to do both arithmetic and logic shift.
-  // Arithmetic is ignored for left shift.
-  assign operand_ext[Width] = arithmetic_i & operand_ext[Width-1] & ~left_i;
+  assign operand_ext[Width] = arithmetic_i & operand_ext[Width-1];
   assign result_ext         = $signed(operand_ext) >>> amount_i;
 
   // Reverse the result back for left shift

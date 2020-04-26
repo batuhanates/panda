@@ -35,11 +35,13 @@ module panda_shifter_tb ();
     #10 amount = 5;
     #10 arithmetic = 1'b1;
     #10 left = 1'b1;
+    #10 arithmetic = 1'b0;
     #10 operand = -4358234;
     amount = 0; arithmetic = 1'b0; left = 1'b0;
     #10 amount = 8;
     #10 arithmetic = 1'b1;
     #10 left = 1'b1;
+    #10 arithmetic = 1'b0;
     #10 amount = 24;
     #10 $finish;
   end
