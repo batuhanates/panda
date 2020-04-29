@@ -3,7 +3,7 @@
 // Panda Core <https://github.com/batuhanates/panda>
 
 module panda_adder #(
-  parameter Width = 32
+  parameter int unsigned Width = 32
 ) (
   input  logic [Width-1:0] operand_a_i,
   input  logic [Width-1:0] operand_b_i,

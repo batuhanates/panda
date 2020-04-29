@@ -6,7 +6,7 @@
 
 module panda_comparator_sub_tb ();
 
-  parameter Width = 32;
+  parameter int unsigned Width = 32;
 
   logic signed [Width-1:0] operand_a;
   logic signed [Width-1:0] operand_b;

@@ -3,7 +3,7 @@
 // Panda Core <https://github.com/batuhanates/panda>
 
 module panda_alu #(
-  parameter Width = 32
+  parameter int unsigned Width = 32
 ) (
   input  panda_pkg::alu_operator_e operator_i,
   input  logic [Width-1:0]         operand_a_i,

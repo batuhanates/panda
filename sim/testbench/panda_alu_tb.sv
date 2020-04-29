@@ -7,7 +7,7 @@
 module panda_alu_tb ();
   import panda_pkg::*;
 
-  parameter Width = 32;
+  parameter int unsigned Width = 32;
 
   panda_pkg::alu_operator_e operator;
   logic [Width-1:0]         operand_a;

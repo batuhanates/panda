@@ -3,8 +3,8 @@
 // Panda Core <https://github.com/batuhanates/panda>
 
 module panda_shifter #(
-  parameter Width       = 32,
-  parameter AmountWidth = $clog2(Width)
+  parameter int unsigned Width       = 32,
+  parameter int unsigned AmountWidth = $clog2(Width)
 ) (
   input  logic                   left_i,
   input  logic                   arithmetic_i,

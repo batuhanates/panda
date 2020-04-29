@@ -3,8 +3,8 @@
 // Panda Core <https://github.com/batuhanates/panda>
 
 module panda_register_file #(
-  parameter Width = 32,
-  parameter Depth = 32
+  parameter int unsigned Width = 32,
+  parameter int unsigned Depth = 32
 ) (
   input  logic                     clk_i,
   input  logic                     rst_ni,

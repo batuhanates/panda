@@ -3,7 +3,7 @@
 // Panda Core <https://github.com/batuhanates/panda>
 
 module panda_comparator_sub #(
-  parameter Width = 32
+  parameter int unsigned Width = 32
 ) (
   input  logic [Width-1:0] sub_result_i, // Result of a - b
   input  logic             msb_a_i,      // sign bit of a

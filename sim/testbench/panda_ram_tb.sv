@@ -4,10 +4,11 @@
 
 module panda_ram_tb ();
 
-  parameter DataWidth = 32;
-  parameter Depth     = 64;
+  parameter int unsigned DataWidth = 32;
+  parameter int unsigned Depth     = 64;
   parameter InitFile = "ram_test.mem";
-  logic                     clk_i = 1'b0;
+
+  logic                     clk_i  = 1'b0;
   logic                     ce_i;
   logic [  DataWidth/8-1:0] we_i;
   logic [$clog2(Depth)-1:0] addr_i;
@@ -28,7 +29,7 @@ module panda_ram_tb ();
   );
 
   always #5 clk_i <= ~clk_i;
-  
+
   initial begin
     ce_i = 1'b0;
     we_i = 4'b0;

@@ -6,8 +6,8 @@
 
 module panda_register_file_tb ();
 
-  parameter Width = 32;
-  parameter Depth = 32;
+  parameter int unsigned Width = 32;
+  parameter int unsigned Depth = 32;
 
   logic                     clk_i      = 1'b0;
   logic                     rst_ni     = 1'b0;

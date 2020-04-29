@@ -6,7 +6,7 @@
 
 module panda_shifter_tb ();
 
-  parameter Width = 32;
+  parameter int unsigned Width = 32;
 
   logic                     left;
   logic                     arithmetic;
