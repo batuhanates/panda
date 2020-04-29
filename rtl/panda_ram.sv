@@ -3,9 +3,10 @@
 // Panda Core <https://github.com/batuhanates/panda>
 
 module panda_ram #(
-  parameter DataWidth = 32,
-  parameter Depth     = 32,
-  parameter InitFile  = ""
+  parameter int unsigned DataWidth = 32,
+  parameter int unsigned Depth     = 32,
+  parameter bit          OutputReg = 1'b1,
+  parameter              InitFile  = ""
 ) (
   input  logic                     clk_i,
   input  logic                     ce_i,
@@ -17,9 +18,18 @@ module panda_ram #(
 
   logic [DataWidth-1:0] memory[Depth];
 
+  if (OutputReg) begin
+    always_ff @(posedge clk_i) begin
+      if (ce_i) begin
+        data_o <= memory[addr_i];
+      end
+    end
+  end else begin
+    assign data_o = memory[addr_i];
+  end
+
   always_ff @(posedge clk_i) begin
     if (ce_i) begin
-      data_o <= memory[addr_i];
       for (int i = 0; i < DataWidth/8; i++) begin
         if (we_i[i]) begin
           memory[addr_i][i*8+:8] <= data_i[i*8+:8];
