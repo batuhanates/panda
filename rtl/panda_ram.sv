@@ -16,32 +16,38 @@ module panda_ram #(
   output logic [    DataWidth-1:0] data_o
 );
 
-  logic [DataWidth-1:0] memory[Depth];
+  logic [DataWidth-1:0] mem[Depth];
+
+  logic [DataWidth-1:0] mem_rdata;
+  logic [DataWidth-1:0] mem_wdata;
+
+  assign mem_rdata = mem[addr_i];
 
   if (OutputReg) begin
     always_ff @(posedge clk_i) begin
       if (ce_i) begin
-        data_o <= memory[addr_i];
+        data_o <= mem_rdata;
       end
     end
   end else begin
-    assign data_o = memory[addr_i];
+    assign data_o = mem_rdata;
+  end
+
+  // Determine write input according to byte-wide write enable
+  for (genvar i = 0; i < DataWidth/8; i++) begin
+    assign mem_wdata[i*8+:8] = we_i[i] ? data_i[i*8+:8] : mem_rdata[i*8+:8];
   end
 
   always_ff @(posedge clk_i) begin
     if (ce_i) begin
-      for (int i = 0; i < DataWidth/8; i++) begin
-        if (we_i[i]) begin
-          memory[addr_i][i*8+:8] <= data_i[i*8+:8];
-        end
-      end
+      mem[addr_i] <= mem_wdata;
     end
   end
 
   if (InitFile != "") begin
     initial begin
       $display("Initializing RAM from %s", InitFile);
-      $readmemh(InitFile, memory);
+      $readmemh(InitFile, mem);
     end
   end
 
