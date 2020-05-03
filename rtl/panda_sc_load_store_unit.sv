@@ -40,10 +40,12 @@ module panda_sc_load_store_unit (
   /*============================
   =            Load            =
   ============================*/
-  always_comb begin
-    load_byte = 'x;
-    load_half = 'x;
+  always_comb begin : proc_load_data
+    load_byte   = '0;
+    load_half   = '0;
+    load_data_o = '0;
 
+    // Select one of the 4 bytes of the word read from memory
     unique case (addr_i[1:0])
       2'b00   : load_byte[7:0] = data_rdata_i[7:0];
       2'b01   : load_byte[7:0] = data_rdata_i[15:8];
@@ -51,20 +53,22 @@ module panda_sc_load_store_unit (
       2'b11   : load_byte[7:0] = data_rdata_i[31:24];
       default : ;
     endcase
+    // Extend with zero or sign
     load_byte[31:8] = {24{load_unsigned_i ? 1'b0 : load_byte[7]}};
 
+    // Select lower or upper half of the word read from memory
     unique case (addr_i[1])
       1'b0    : load_half[15:0] = data_rdata_i[15:0];
       1'b1    : load_half[15:0] = data_rdata_i[31:16];
       default : ;
     endcase
+    // Extend with zero or sign
     load_half[31:16] = {16{load_unsigned_i ? 1'b0 : load_half[15]}};
 
+    // Take the word directly
     load_word = data_rdata_i;
-  end
 
-  always_comb begin
-    load_data_o = load_word;
+    // MUX for choosing byte, half, or word
     unique case (width_i)
       2'b00   : load_data_o = load_byte;
       2'b01   : load_data_o = load_half;
@@ -81,18 +85,23 @@ module panda_sc_load_store_unit (
   assign store_half = {2{store_data_i[15:0]}};
   assign store_byte = {4{store_data_i[7:0]}};
 
-  always_comb begin
+  // MUX for choosing byte, half, or word
+  always_comb begin : proc_data_wdata
     data_wdata_o = store_word;
-    data_we_byte = '0;
-    data_we_half = '0;
-
     unique case (width_i)
       2'b00   : data_wdata_o = store_byte;
       2'b01   : data_wdata_o = store_half;
       2'b10   : data_wdata_o = store_word;
       default : ;
     endcase
+  end
 
+  always_comb begin : proc_data_we
+    data_we_byte = '0;
+    data_we_half = '0;
+    data_we_tmp  = '0;
+
+    // Choose which byte of the memory word will be written
     unique case (addr_i[1:0])
       2'b00   : data_we_byte = 4'b0001;
       2'b01   : data_we_byte = 4'b0010;
@@ -101,26 +110,26 @@ module panda_sc_load_store_unit (
       default : ;
     endcase
 
+    // Choose which half of the memory word will be written
     unique case (addr_i[1])
       1'b0    : data_we_half = 4'b0011;
       1'b1    : data_we_half = 4'b1100;
       default : ;
     endcase
 
+    // Write to whole word
     data_we_word = 4'b1111;
-  end
 
-  always_comb begin
-    data_we_tmp = '0;
+    // MUX for choosing write enable depending on width
     unique case (width_i)
       2'b00   : data_we_tmp = data_we_byte;
       2'b01   : data_we_tmp = data_we_half;
       2'b10   : data_we_tmp = data_we_word;
       default : ;
     endcase
+    // AND write enable with store enable signal
+    data_we_o = data_we_tmp & {4{load_store_i}};
   end
-
-  assign data_we_o = data_we_tmp & {4{load_store_i}};
   /*=====  End of Store  ======*/
 
 endmodule
