@@ -3,10 +3,11 @@
 // Panda Core <https://github.com/batuhanates/panda>
 
 module panda_ram #(
-  parameter int unsigned DataWidth = 32,
-  parameter int unsigned Depth     = 32,
-  parameter bit          OutputReg = 1'b1,
-  parameter              InitFile  = ""
+  parameter int unsigned DataWidth  = 32,
+  parameter int unsigned Depth      = 32,
+  parameter bit          OutputReg  = 1'b1,
+  parameter bit          WriteFirst = 1'b0,
+  parameter              InitFile   = ""
 ) (
   input  logic                     clk_i,
   input  logic                     ce_i,
@@ -26,11 +27,11 @@ module panda_ram #(
   if (OutputReg) begin
     always_ff @(posedge clk_i) begin
       if (ce_i) begin
-        data_o <= mem_rdata;
+        data_o <= WriteFirst ? mem_wdata : mem_rdata;
       end
     end
   end else begin
-    assign data_o = mem_rdata;
+    assign data_o = WriteFirst ? mem_wdata : mem_rdata;
   end
 
   // Determine write input according to byte-wide write enable
