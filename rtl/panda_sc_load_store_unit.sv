@@ -9,7 +9,7 @@
 * Assumes that the address is correctly alligned.
 */
 module panda_sc_load_store_unit (
-  input  logic                  load_store_i,    // 1 for store
+  input  logic                  store_i,         // 1 for store
   input  logic                  load_unsigned_i, // 1 for unsigned extended load
   input  panda_pkg::lsu_width_e width_i,         // byte, half, word
   input  logic [31:0]           addr_i,
@@ -55,78 +55,78 @@ module panda_sc_load_store_unit (
     endcase
     // Extend with zero or sign
     load_byte_extend = load_unsigned_i ? 1'b0 : load_byte[7];
-    load_byte[31:8] = {24{load_byte_extend}};
+    load_byte[31:8]  = {24{load_byte_extend}};
 
-      // Select lower or upper half of the word read from memory
-      unique case (addr_i[1])
-        1'b0    : load_half[15:0] = data_rdata_i[15:0];
-        1'b1    : load_half[15:0] = data_rdata_i[31:16];
-        default : load_half[15:0] = data_rdata_i[15:0];
-      endcase
-      // Extend with zero or sign
-      load_half_extend = load_unsigned_i ? 1'b0 : load_half[15];
-      load_half[31:16] = {16{load_half_extend}};
+    // Select lower or upper half of the word read from memory
+    unique case (addr_i[1])
+      1'b0    : load_half[15:0] = data_rdata_i[15:0];
+      1'b1    : load_half[15:0] = data_rdata_i[31:16];
+      default : load_half[15:0] = data_rdata_i[15:0];
+    endcase
+    // Extend with zero or sign
+    load_half_extend = load_unsigned_i ? 1'b0 : load_half[15];
+    load_half[31:16] = {16{load_half_extend}};
 
-      // Take the word directly
-      load_word = data_rdata_i;
+    // Take the word directly
+    load_word = data_rdata_i;
 
-      // MUX for choosing byte, half, or word
-      unique case (width_i)
-        LSU_WIDTH_BYTE : load_data_o = load_byte;
-        LSU_WIDTH_HALF : load_data_o = load_half;
-        LSU_WIDTH_WORD : load_data_o = load_word;
-        default        : load_data_o = load_word;
-      endcase
-      end
-      /*=====  End of Load  ======*/
+    // MUX for choosing byte, half, or word
+    unique case (width_i)
+      LSU_WIDTH_BYTE : load_data_o = load_byte;
+      LSU_WIDTH_HALF : load_data_o = load_half;
+      LSU_WIDTH_WORD : load_data_o = load_word;
+      default        : load_data_o = load_word;
+    endcase
+  end
+  /*=====  End of Load  ======*/
 
-      /*=============================
-      =            Store            =
-      =============================*/
-      assign store_word = store_data_i;
-      assign store_half = {2{store_data_i[15:0]}};
-      assign store_byte = {4{store_data_i[7:0]}};
+  /*=============================
+  =            Store            =
+  =============================*/
+  assign store_word = store_data_i;
+  assign store_half = {2{store_data_i[15:0]}};
+  assign store_byte = {4{store_data_i[7:0]}};
 
-      // MUX for choosing byte, half, or word
-      always_comb begin : proc_data_wdata
-        unique case (width_i)
-          LSU_WIDTH_BYTE : data_wdata_o = store_byte;
-          LSU_WIDTH_HALF : data_wdata_o = store_half;
-          LSU_WIDTH_WORD : data_wdata_o = store_word;
-          default        : data_wdata_o = store_word;
-        endcase
-      end
+  // MUX for choosing byte, half, or word
+  always_comb begin : proc_data_wdata
+    unique case (width_i)
+      LSU_WIDTH_BYTE : data_wdata_o = store_byte;
+      LSU_WIDTH_HALF : data_wdata_o = store_half;
+      LSU_WIDTH_WORD : data_wdata_o = store_word;
+      default        : data_wdata_o = store_word;
+    endcase
+  end
 
-      always_comb begin : proc_data_we
-        // Choose which byte of the memory word will be written
-        unique case (addr_i[1:0])
-          2'b00   : data_we_byte = 4'b0001;
-          2'b01   : data_we_byte = 4'b0010;
-          2'b10   : data_we_byte = 4'b0100;
-          2'b11   : data_we_byte = 4'b1000;
-          default : data_we_byte = '0;
-        endcase
+  always_comb begin : proc_data_we
+    // Choose which byte of the memory word will be written
+    unique case (addr_i[1:0])
+      2'b00   : data_we_byte = 4'b0001;
+      2'b01   : data_we_byte = 4'b0010;
+      2'b10   : data_we_byte = 4'b0100;
+      2'b11   : data_we_byte = 4'b1000;
+      default : data_we_byte = '0;
+    endcase
 
-        // Choose which half of the memory word will be written
-        unique case (addr_i[1])
-          1'b0    : data_we_half = 4'b0011;
-          1'b1    : data_we_half = 4'b1100;
-          default : data_we_half = '0;
-        endcase
+    // Choose which half of the memory word will be written
+    unique case (addr_i[1])
+      1'b0    : data_we_half = 4'b0011;
+      1'b1    : data_we_half = 4'b1100;
+      default : data_we_half = '0;
+    endcase
 
-        // Write to whole word
-        data_we_word = 4'b1111;
+    // Write to whole word
+    data_we_word = 4'b1111;
 
-        // MUX for choosing write enable depending on width
-        unique case (width_i)
-          LSU_WIDTH_BYTE : data_we_tmp = data_we_byte;
-          LSU_WIDTH_HALF : data_we_tmp = data_we_half;
-          LSU_WIDTH_WORD : data_we_tmp = data_we_word;
-          default        : data_we_tmp  = '0;
-        endcase
-        // AND write enable with store enable signal
-        data_we_o = data_we_tmp & {4{load_store_i}};
-      end
-      /*=====  End of Store  ======*/
+    // MUX for choosing write enable depending on width
+    unique case (width_i)
+      LSU_WIDTH_BYTE : data_we_tmp = data_we_byte;
+      LSU_WIDTH_HALF : data_we_tmp = data_we_half;
+      LSU_WIDTH_WORD : data_we_tmp = data_we_word;
+      default        : data_we_tmp  = '0;
+    endcase
+    // AND write enable with store enable signal
+    data_we_o = data_we_tmp & {4{store_i}};
+  end
+  /*=====  End of Store  ======*/
 
-      endmodule
+endmodule

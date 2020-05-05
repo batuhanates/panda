@@ -10,22 +10,22 @@ module panda_sc_datapath_mem_tb ();
   parameter unsigned DataMemDepth = 64;
   parameter unsigned DataMemInitFile = "ram_test.mem";
 
-  logic          clk_i              = 1'b0;
-  logic          rst_ni             = 1'b0;
-  logic [ 4:0]   rs1_addr_i         = 0;
-  logic [ 4:0]   rs2_addr_i         = 0;
-  logic [ 4:0]   rd_addr_i          = 0;
-  logic          rd_we_i            = 1'b0;
-  op_a_sel_e     sel_operand_a_i    = OP_A_RS1;
-  op_b_sel_e     sel_operand_b_i    = OP_B_RS2;
-  rd_data_sel_e  sel_rd_data_i      = RD_DATA_ALU;
-  alu_operator_e alu_operator_i     = ALU_ADD;
-  logic          load_store_i       = 1'b0;
-  lsu_width_e    load_store_width_i = LSU_WIDTH_BYTE;
-  logic          load_unsigned_i    = 1'b0;
-  logic [31:0]   pc_i               = 0;
-  logic [31:0]   pc_next_i;
-  logic [31:0]   imm_i              = 0;
+  logic          clk_i               = 1'b0;
+  logic          rst_ni              = 1'b0;
+  logic [ 4:0]   rs1_addr_i          = 0;
+  logic [ 4:0]   rs2_addr_i          = 0;
+  logic [ 4:0]   rd_addr_i           = 0;
+  logic          rd_we_i             = 1'b0;
+  op_a_sel_e     op_a_sel_i          = OP_A_RS1;
+  op_b_sel_e     op_b_sel_i          = OP_B_RS2;
+  rd_data_sel_e  rd_data_sel_i       = RD_DATA_ALU;
+  alu_operator_e alu_operator_i      = ALU_ADD;
+  logic          lsu_store_i         = 1'b0;
+  lsu_width_e    lsu_width_i         = LSU_WIDTH_BYTE;
+  logic          lsu_load_unsigned_i = 1'b0;
+  logic [31:0]   pc_i                = 0;
+  logic [31:0]   pc_inc_i;
+  logic [31:0]   imm_i               = 0;
   logic [31:0]   jump_target_o;
   logic          branch_cond_o;
 
@@ -33,24 +33,24 @@ module panda_sc_datapath_mem_tb ();
     .DataMemDepth   (DataMemDepth   ),
     .DataMemInitFile(DataMemInitFile)
   ) dut (
-    .clk_i             (clk_i             ),
-    .rst_ni            (rst_ni            ),
-    .rs1_addr_i        (rs1_addr_i        ),
-    .rs2_addr_i        (rs2_addr_i        ),
-    .rd_addr_i         (rd_addr_i         ),
-    .rd_we_i           (rd_we_i           ),
-    .sel_operand_a_i   (sel_operand_a_i   ),
-    .sel_operand_b_i   (sel_operand_b_i   ),
-    .sel_rd_data_i     (sel_rd_data_i     ),
-    .alu_operator_i    (alu_operator_i    ),
-    .load_store_i      (load_store_i      ),
-    .load_store_width_i(load_store_width_i),
-    .load_unsigned_i   (load_unsigned_i   ),
-    .pc_i              (pc_i              ),
-    .pc_next_i         (pc_next_i         ),
-    .imm_i             (imm_i             ),
-    .jump_target_o     (jump_target_o     ),
-    .branch_cond_o     (branch_cond_o     )
+    .clk_i              (clk_i              ),
+    .rst_ni             (rst_ni             ),
+    .rs1_addr_i         (rs1_addr_i         ),
+    .rs2_addr_i         (rs2_addr_i         ),
+    .rd_addr_i          (rd_addr_i          ),
+    .rd_we_i            (rd_we_i            ),
+    .op_a_sel_i         (op_a_sel_i         ),
+    .op_b_sel_i         (op_b_sel_i         ),
+    .rd_data_sel_i      (rd_data_sel_i      ),
+    .alu_operator_i     (alu_operator_i     ),
+    .lsu_store_i        (lsu_store_i        ),
+    .lsu_width_i        (lsu_width_i        ),
+    .lsu_load_unsigned_i(lsu_load_unsigned_i),
+    .pc_i               (pc_i               ),
+    .pc_inc_i           (pc_inc_i           ),
+    .imm_i              (imm_i              ),
+    .jump_target_o      (jump_target_o      ),
+    .branch_cond_o      (branch_cond_o      )
   );
 
   always #5 clk_i = ~clk_i;
@@ -59,43 +59,43 @@ module panda_sc_datapath_mem_tb ();
     if(~rst_ni) begin
       pc_i <= 0;
     end else begin
-      pc_i <= pc_next_i;
+      pc_i <= pc_inc_i;
     end
   end
 
-  assign pc_next_i = pc_i + 4;
+  assign pc_inc_i = pc_i + 4;
 
   initial begin : proc_stim
     #10 rst_ni = 1'b1; rd_addr_i = 1; rd_we_i = 1'b1;
-    sel_operand_b_i = OP_B_IMM; imm_i = 32'hABCDEF78;
+    op_b_sel_i = OP_B_IMM; imm_i = 32'hABCDEF78;
     #10 rd_addr_i = 2; imm_i = 32'h1234DEAD;
     // load word from mem 8 to x3
-    #10 rd_addr_i = 3; rs1_addr_i = 0; sel_rd_data_i = RD_DATA_LOAD; imm_i = 8;
-    load_store_width_i = LSU_WIDTH_WORD; load_unsigned_i = 1'b0;
+    #10 rd_addr_i = 3; rs1_addr_i = 0; rd_data_sel_i = RD_DATA_LOAD; imm_i = 8;
+    lsu_width_i = LSU_WIDTH_WORD; lsu_load_unsigned_i = 1'b0;
     // load half from mem 8 to x4
-    #10 rd_addr_i = 4; load_store_width_i = LSU_WIDTH_HALF;
+    #10 rd_addr_i = 4; lsu_width_i = LSU_WIDTH_HALF;
     // load unsigned half from mem 8 to x5
-    #10 rd_addr_i = 5; load_unsigned_i = LSU_WIDTH_HALF;
+    #10 rd_addr_i = 5; lsu_load_unsigned_i = LSU_WIDTH_HALF;
     // load byte from mem 8 to x6
-    #10 rd_addr_i = 6; load_store_width_i = LSU_WIDTH_BYTE;
-    load_unsigned_i = 1'b0;
+    #10 rd_addr_i = 6; lsu_width_i = LSU_WIDTH_BYTE;
+    lsu_load_unsigned_i = 1'b0;
     // load unsigned byte from mem 8 to x7
-    #10 rd_addr_i = 7; load_unsigned_i = 1'b1;
+    #10 rd_addr_i = 7; lsu_load_unsigned_i = 1'b1;
     // load unsigned half from mem 18 to x8 (2 aligned read)
-    #10 rd_addr_i = 8; imm_i = 18; load_store_width_i = LSU_WIDTH_HALF;
+    #10 rd_addr_i = 8; imm_i = 18; lsu_width_i = LSU_WIDTH_HALF;
     // load half from mem 18 to x9 (2 aligned read)
-    #10 rd_addr_i = 9; load_unsigned_i = 1'b0;
+    #10 rd_addr_i = 9; lsu_load_unsigned_i = 1'b0;
 
     // store word from x1 to mem 0
-    #10 rd_we_i = 1'b0; rs2_addr_i = 1; load_store_i = 1'b1; imm_i = 0;
-    load_store_width_i = LSU_WIDTH_WORD;
+    #10 rd_we_i = 1'b0; rs2_addr_i = 1; lsu_store_i = 1'b1; imm_i = 0;
+    lsu_width_i = LSU_WIDTH_WORD;
     // store half from x1 to mem 4
-    #10 imm_i = 4; load_store_width_i = LSU_WIDTH_HALF;
+    #10 imm_i = 4; lsu_width_i = LSU_WIDTH_HALF;
     // store half from x2 to mem 6 (2 aligned write)
     #10 rs2_addr_i = 2; imm_i = 6;
     // store byte from x2 to mem 9 (1 aligned write)
-    #10 imm_i = 9; load_store_width_i = LSU_WIDTH_BYTE;
-    #20 $finish;
+    #10 imm_i = 9; lsu_width_i = LSU_WIDTH_BYTE;
+    #15 $finish;
   end
 
 endmodule

@@ -9,22 +9,22 @@ module panda_sc_datapath_mem #(
   input  logic                     clk_i,
   input  logic                     rst_ni,
   // Register File
-  input  logic [ 4:0]              rs1_addr_i,         // AA
-  input  logic [ 4:0]              rs2_addr_i,         // BA
-  input  logic [ 4:0]              rd_addr_i,          // DA
-  input  logic                     rd_we_i,            // RW
+  input  logic [ 4:0]              rs1_addr_i,          // AA
+  input  logic [ 4:0]              rs2_addr_i,          // BA
+  input  logic [ 4:0]              rd_addr_i,           // DA
+  input  logic                     rd_we_i,             // RW
   // Select
-  input  panda_pkg::op_a_sel_e     sel_operand_a_i,    // MA
-  input  panda_pkg::op_b_sel_e     sel_operand_b_i,    // MB
-  input  panda_pkg::rd_data_sel_e  sel_rd_data_i,      // MD
-  input  panda_pkg::alu_operator_e alu_operator_i,     // FS
+  input  panda_pkg::op_a_sel_e     op_a_sel_i,          // MA
+  input  panda_pkg::op_b_sel_e     op_b_sel_i,          // MB
+  input  panda_pkg::rd_data_sel_e  rd_data_sel_i,       // MD
+  input  panda_pkg::alu_operator_e alu_operator_i,      // FS
   // Load-Store
-  input  logic                     load_store_i,       // LS
-  input  panda_pkg::lsu_width_e    load_store_width_i, // WS
-  input  logic                     load_unsigned_i,    // LU
+  input  logic                     lsu_store_i,         // LS
+  input  panda_pkg::lsu_width_e    lsu_width_i,         // WS
+  input  logic                     lsu_load_unsigned_i, // LU
   // Data from controller
   input  logic [31:0]              pc_i,
-  input  logic [31:0]              pc_next_i,
+  input  logic [31:0]              pc_inc_i,
   input  logic [31:0]              imm_i,
   // Jump-Branch
   output logic [31:0]              jump_target_o,
@@ -45,28 +45,28 @@ module panda_sc_datapath_mem #(
   assign data_addr = data_addr_ext[DATA_ADDR_WIDTH+1:2];
 
   panda_sc_datapath i_datapath (
-    .clk_i             (clk_i             ),
-    .rst_ni            (rst_ni            ),
-    .rs1_addr_i        (rs1_addr_i        ),
-    .rs2_addr_i        (rs2_addr_i        ),
-    .rd_addr_i         (rd_addr_i         ),
-    .rd_we_i           (rd_we_i           ),
-    .sel_operand_a_i   (sel_operand_a_i   ),
-    .sel_operand_b_i   (sel_operand_b_i   ),
-    .sel_rd_data_i     (sel_rd_data_i     ),
-    .alu_operator_i    (alu_operator_i    ),
-    .load_store_i      (load_store_i      ),
-    .load_store_width_i(load_store_width_i),
-    .load_unsigned_i   (load_unsigned_i   ),
-    .data_rdata_i      (data_rdata        ),
-    .data_wdata_o      (data_wdata        ),
-    .data_addr_o       (data_addr_ext     ),
-    .data_we_o         (data_we           ),
-    .pc_i              (pc_i              ),
-    .pc_next_i         (pc_next_i         ),
-    .imm_i             (imm_i             ),
-    .jump_target_o     (jump_target_o     ),
-    .branch_cond_o     (branch_cond_o     )
+    .clk_i              (clk_i              ),
+    .rst_ni             (rst_ni             ),
+    .rs1_addr_i         (rs1_addr_i         ),
+    .rs2_addr_i         (rs2_addr_i         ),
+    .rd_addr_i          (rd_addr_i          ),
+    .rd_we_i            (rd_we_i            ),
+    .op_a_sel_i         (op_a_sel_i         ),
+    .op_b_sel_i         (op_b_sel_i         ),
+    .rd_data_sel_i      (rd_data_sel_i      ),
+    .alu_operator_i     (alu_operator_i     ),
+    .lsu_store_i        (lsu_store_i        ),
+    .lsu_width_i        (lsu_width_i        ),
+    .lsu_load_unsigned_i(lsu_load_unsigned_i),
+    .data_rdata_i       (data_rdata         ),
+    .data_wdata_o       (data_wdata         ),
+    .data_addr_o        (data_addr_ext      ),
+    .data_we_o          (data_we            ),
+    .pc_i               (pc_i               ),
+    .pc_inc_i           (pc_inc_i           ),
+    .imm_i              (imm_i              ),
+    .jump_target_o      (jump_target_o      ),
+    .branch_cond_o      (branch_cond_o      )
   );
 
   panda_ram #(

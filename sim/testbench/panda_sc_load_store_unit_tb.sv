@@ -7,7 +7,7 @@
 module panda_sc_load_store_unit_tb ();
   import panda_pkg::*;
 
-  logic        load_store;
+  logic        store;
   logic        load_unsigned;
   lsu_width_e  width;
   logic [31:0] addr;
@@ -19,7 +19,7 @@ module panda_sc_load_store_unit_tb ();
   logic [ 3:0] data_we;
 
   panda_sc_load_store_unit dut (
-    .load_store_i   (load_store   ),
+    .store_i        (store        ),
     .load_unsigned_i(load_unsigned),
     .width_i        (width        ),
     .addr_i         (addr         ),
@@ -32,7 +32,7 @@ module panda_sc_load_store_unit_tb ();
   );
 
   initial begin : proc_stim
-    load_store = 1'b0;
+    store = 1'b0;
     load_unsigned = 1'b0;
     width = LSU_WIDTH_BYTE;
     addr = '0;
@@ -45,10 +45,10 @@ module panda_sc_load_store_unit_tb ();
     for (addr = 0; addr < 4; addr++) begin
       for (int i = 0; i < 3; i++) begin
         width = width.next();
-        load_unsigned = 1'b0; load_store = 1'b0;
-        #10 load_store = 1'b1;
-        #10 load_unsigned = 1'b1; load_store = 1'b0;
-        #10 load_store = 1'b1;
+        load_unsigned = 1'b0; store = 1'b0;
+        #10 store = 1'b1;
+        #10 load_unsigned = 1'b1; store = 1'b0;
+        #10 store = 1'b1;
         #10;
       end
     end
