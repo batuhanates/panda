@@ -14,13 +14,13 @@ module panda_sc_datapath_mem #(
   input  logic [ 4:0]              rd_addr_i,          // DA
   input  logic                     rd_we_i,            // RW
   // Select
-  input  logic                     sel_operand_a_i,    // MA
-  input  logic                     sel_operand_b_i,    // MB
-  input  logic [ 1:0]              sel_rd_data_i,      // MD
+  input  panda_pkg::op_a_sel_e     sel_operand_a_i,    // MA
+  input  panda_pkg::op_b_sel_e     sel_operand_b_i,    // MB
+  input  panda_pkg::rd_data_sel_e  sel_rd_data_i,      // MD
   input  panda_pkg::alu_operator_e alu_operator_i,     // FS
   // Load-Store
   input  logic                     load_store_i,       // LS
-  input  logic [ 1:0]              load_store_width_i, // WS
+  input  panda_pkg::lsu_width_e    load_store_width_i, // WS
   input  logic                     load_unsigned_i,    // LU
   // Data from controller
   input  logic [31:0]              pc_i,

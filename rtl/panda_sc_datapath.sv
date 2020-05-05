@@ -11,13 +11,13 @@ module panda_sc_datapath (
   input  logic [ 4:0]              rd_addr_i,          // DA
   input  logic                     rd_we_i,            // RW
   // Select
-  input  logic                     sel_operand_a_i,    // MA
-  input  logic                     sel_operand_b_i,    // MB
-  input  logic [ 1:0]              sel_rd_data_i,      // MD
+  input  panda_pkg::op_a_sel_e     sel_operand_a_i,    // MA
+  input  panda_pkg::op_b_sel_e     sel_operand_b_i,    // MB
+  input  panda_pkg::rd_data_sel_e  sel_rd_data_i,      // MD
   input  panda_pkg::alu_operator_e alu_operator_i,     // FS
   // Load-Store
   input  logic                     load_store_i,       // LS
-  input  logic [ 1:0]              load_store_width_i, // WS
+  input  panda_pkg::lsu_width_e    load_store_width_i, // WS
   input  logic                     load_unsigned_i,    // LU
   // Data memory interface
   input  logic [31:0]              data_rdata_i,       // data in
@@ -51,13 +51,12 @@ module panda_sc_datapath (
   assign branch_cond_o = alu_result[0];
 
   always_comb begin : proc_rd_data_mux
-    rd_data = '0;
     unique case (sel_rd_data_i)
-      2'b00   : rd_data = alu_result;
-      2'b01   : rd_data = load_data;
-      2'b10   : rd_data = pc_next_i;
-      2'b11   : rd_data = imm_i;
-      default : ;
+      RD_DATA_ALU    : rd_data = alu_result;
+      RD_DATA_LOAD   : rd_data = load_data;
+      RD_DATA_PC_INC : rd_data = pc_next_i;
+      RD_DATA_IMM    : rd_data = imm_i;
+      default        : rd_data = alu_result;
     endcase
   end
 
@@ -76,8 +75,19 @@ module panda_sc_datapath (
     .rd_we_i   (rd_we_i   )
   );
 
-  assign alu_operand_a = sel_operand_a_i ? pc_i : rs1_data;
-  assign alu_operand_b = sel_operand_b_i ? imm_i : rs2_data;
+  always_comb begin : proc_op_mux
+    unique case (sel_operand_a_i)
+      OP_A_RS1 : alu_operand_a = rs1_data;
+      OP_A_PC  : alu_operand_a = pc_i;
+      default  : alu_operand_a = rs1_data;
+    endcase
+
+    unique case (sel_operand_b_i)
+      OP_B_RS2 : alu_operand_b = rs2_data;
+      OP_B_IMM : alu_operand_b = imm_i;
+      default  : alu_operand_b = rs2_data;
+    endcase
+  end
 
   panda_alu #(
     .Width(32)

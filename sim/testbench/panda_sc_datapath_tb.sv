@@ -7,29 +7,30 @@
 module panda_sc_datapath_tb ();
   import panda_pkg::*;
 
-  logic        clk_i              = 1'b0;
-  logic        rst_ni             = 1'b0;
-  logic [ 4:0] rs1_addr_i         = 0;
-  logic [ 4:0] rs2_addr_i         = 0;
-  logic [ 4:0] rd_addr_i          = 0;
-  logic        rd_we_i            = 1'b0;
-  logic        sel_operand_a_i    = 1'b0;
-  logic        sel_operand_b_i    = 1'b0;
-  logic [ 1:0] sel_rd_data_i      = 2'b0;
-  logic        load_store_i       = 1'b0;
-  logic [ 1:0] load_store_width_i = 2'b0;
-  logic        load_unsigned_i    = 1'b0;
-  logic [31:0] data_rdata_i       = 0;
-  logic [31:0] data_wdata_o;
-  logic [31:0] data_addr_o;
-  logic [ 3:0] data_we_o;
-  logic [31:0] pc_i               = 0;
-  logic [31:0] pc_next_i;
-  logic [31:0] imm_i              = 0;
-  logic [31:0] jump_target_o;
-  logic        branch_cond_o;
+  logic          clk_i              = 1'b0;
+  logic          rst_ni             = 1'b0;
+  logic [ 4:0]   rs1_addr_i         = 0;
+  logic [ 4:0]   rs2_addr_i         = 0;
+  logic [ 4:0]   rd_addr_i          = 0;
+  logic          rd_we_i            = 1'b0;
+  op_a_sel_e     sel_operand_a_i    = OP_A_RS1;
+  op_b_sel_e     sel_operand_b_i    = OP_B_RS2;
+  rd_data_sel_e  sel_rd_data_i      = RD_DATA_ALU;
+  alu_operator_e alu_operator_i     = ALU_ADD;
+  logic          load_store_i       = 1'b0;
+  lsu_width_e    load_store_width_i = LSU_WIDTH_BYTE;
+  logic          load_unsigned_i    = 1'b0;
+  logic [31:0]   data_rdata_i       = 0;
+  logic [31:0]   data_wdata_o;
+  logic [31:0]   data_addr_o;
+  logic [ 3:0]   data_we_o;
+  logic [31:0]   pc_i               = 0;
+  logic [31:0]   pc_next_i;
+  logic [31:0]   imm_i              = 0;
+  logic [31:0]   jump_target_o;
+  logic          branch_cond_o;
 
-  alu_operator_e alu_operator_i = ALU_ADD;
+
 
   panda_sc_datapath dut (
     .clk_i             (clk_i             ),
@@ -72,33 +73,34 @@ module panda_sc_datapath_tb ();
   initial begin : proc_stim
     #10 rst_ni = 1'b1;
     // ADDI x1, x0, 10
-    rd_addr_i = 1; rd_we_i = 1'b1; imm_i = 10; sel_operand_b_i = 1'b1;
+    rd_addr_i = 1; rd_we_i = 1'b1; imm_i = 10; sel_operand_b_i = OP_B_IMM;
     // ADDI x2, x0, 15
     #10 rd_addr_i = 2; imm_i = 15;
     // JAL x3, 12
-    #10 rd_addr_i = 3; sel_rd_data_i = 2'b10;
-    sel_operand_a_i = 1'b1; sel_operand_b_i = 1'b1; imm_i = 12;
+    #10 rd_addr_i = 3; sel_rd_data_i = RD_DATA_PC_INC;
+    sel_operand_a_i = OP_A_PC; imm_i = 12;
     // ADDI x4, x1, 24
-    #10 rd_addr_i = 4; sel_operand_a_i = 1'b0; rs1_addr_i = 1; imm_i = 24;
+    #10 rd_addr_i = 4; sel_operand_a_i = OP_A_RS1; rs1_addr_i = 1; imm_i = 24;
     // BGE x4, x3, 24
     #10 rd_we_i = 1'b0; rs1_addr_i = 4; rs2_addr_i = 3;
-    sel_operand_a_i = 1'b0; sel_operand_b_i = 1'b0; alu_operator_i = ALU_GE;
+    sel_operand_b_i = OP_B_RS2; alu_operator_i = ALU_GE;
     // BLT x4, x3, 24
     #10 alu_operator_i = ALU_LT;
     // SW x0, x1, 16
-    #10 rs1_addr_i = 0; rs2_addr_i = 1; sel_operand_b_i = 1'b1; imm_i = 16;
-    load_store_i = 1'b1; load_store_width_i = 2'b10; alu_operator_i = ALU_ADD;
+    #10 rs1_addr_i = 0; rs2_addr_i = 1; sel_operand_b_i = OP_B_IMM; imm_i = 16;
+    load_store_i = 1'b1; load_store_width_i = LSU_WIDTH_WORD;
+    alu_operator_i = ALU_ADD;
     // SH x0, x1, 20
-    #10 imm_i = 20; load_store_width_i = 2'b01;
+    #10 imm_i = 20; load_store_width_i = LSU_WIDTH_HALF;
     // SH x0, x1, 22
     #10 imm_i = 22;
     // LH x5, x0, 12
     #10 rd_we_i = 1'b1; rd_addr_i = 5; load_store_i = 1'b0; imm_i = 12;
-    sel_rd_data_i = 2'b01; data_rdata_i = 32'hABCDEF78;
+    sel_rd_data_i = RD_DATA_LOAD; data_rdata_i = 32'hABCDEF78;
     // LHU x6, x0, 12
     #10 rd_addr_i = 6; load_unsigned_i = 1'b1;
     // LUI x7, 0xABCDE000
-    #10 rd_addr_i = 7; imm_i = 32'hABCDE000; sel_rd_data_i = 2'b11;
+    #10 rd_addr_i = 7; imm_i = 32'hABCDE000; sel_rd_data_i = RD_DATA_IMM;
     #15 $finish;
   end
 

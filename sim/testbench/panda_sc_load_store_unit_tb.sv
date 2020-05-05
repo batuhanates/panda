@@ -5,10 +5,11 @@
 `timescale 1ns/1ps
 
 module panda_sc_load_store_unit_tb ();
+  import panda_pkg::*;
 
   logic        load_store;
   logic        load_unsigned;
-  logic [ 1:0] width;
+  lsu_width_e  width;
   logic [31:0] addr;
   logic [31:0] store_data;
   logic [31:0] load_data;
@@ -33,7 +34,7 @@ module panda_sc_load_store_unit_tb ();
   initial begin : proc_stim
     load_store = 1'b0;
     load_unsigned = 1'b0;
-    width = '0;
+    width = LSU_WIDTH_BYTE;
     addr = '0;
     store_data = '0;
     data_rdata = '0;
@@ -42,7 +43,8 @@ module panda_sc_load_store_unit_tb ();
     store_data = 32'h12345678;
 
     for (addr = 0; addr < 4; addr++) begin
-      for (width = 0; width < 3; width++) begin
+      for (int i = 0; i < 3; i++) begin
+        width = width.next();
         load_unsigned = 1'b0; load_store = 1'b0;
         #10 load_store = 1'b1;
         #10 load_unsigned = 1'b1; load_store = 1'b0;
