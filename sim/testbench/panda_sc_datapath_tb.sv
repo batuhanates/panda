@@ -97,7 +97,9 @@ module panda_sc_datapath_tb ();
     sel_rd_data_i = 2'b01; data_rdata_i = 32'hABCDEF78;
     // LHU x6, x0, 12
     #10 rd_addr_i = 6; load_unsigned_i = 1'b1;
-    #10 $finish;
+    // LUI x7, 0xABCDE000
+    #10 rd_addr_i = 7; imm_i = 32'hABCDE000; sel_rd_data_i = 2'b11;
+    #15 $finish;
   end
 
 endmodule
