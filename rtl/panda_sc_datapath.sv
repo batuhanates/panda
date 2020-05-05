@@ -50,8 +50,16 @@ module panda_sc_datapath (
   assign jump_target_o = {alu_result[31:1], 1'b0};
   assign branch_cond_o = alu_result[0];
 
-  assign rd_data =
-    sel_rd_data_i[1] ? pc_next_i : (sel_rd_data_i[0] ? load_data : alu_result);
+  always_comb begin : proc_rd_data_mux
+    rd_data = '0;
+    unique case (sel_rd_data_i)
+      2'b00   : rd_data = alu_result;
+      2'b01   : rd_data = load_data;
+      2'b10   : rd_data = pc_next_i;
+      2'b11   : rd_data = imm_i;
+      default : ;
+    endcase
+  end
 
   panda_register_file #(
     .Width(32),
