@@ -2,10 +2,7 @@
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // Panda Core <https://github.com/batuhanates/panda>
 
-module panda_sc_controller #(
-  parameter int unsigned InstrMemDepth    = 32,
-  parameter              InstrMemInitFile = ""
-) (
+module panda_sc_controller (
   input  logic                     clk_i,
   input  logic                     rst_ni,
   // Register File
@@ -28,11 +25,12 @@ module panda_sc_controller #(
   output logic [31:0]              imm_o,
   // Jump-Branch
   input  logic [31:0]              jump_target_i,
-  input  logic                     branch_cond_i
+  input  logic                     branch_cond_i,
+  // Instruction Memory
+  input  logic [31:0]              instr_i
 );
   import panda_pkg::*;
 
-  logic [31:0] instr;
   logic [31:0] imm;
   logic [31:0] pc;
   logic [31:0] branch_target;
@@ -65,25 +63,8 @@ module panda_sc_controller #(
     .result_o   (branch_target)
   );
 
-  localparam int unsigned AddrWidth = $clog2(InstrMemDepth);
-
-  panda_ram #(
-    .DataWidth (32              ),
-    .Depth     (InstrMemDepth   ),
-    .OutputReg (1'b0            ),
-    .WriteFirst(1'b0            ),
-    .InitFile  (InstrMemInitFile)
-  ) i_instruction_memory (
-    .clk_i (clk_i            ),
-    .ce_i  (1'b1             ),
-    .we_i  (4'b0             ),
-    .addr_i(pc[AddrWidth+1:2]),
-    .data_i(32'b0            ),
-    .data_o(instr            )
-  );
-
   panda_sc_id i_instruction_decoder (
-    .instr_i            (instr              ),
+    .instr_i            (instr_i            ),
     .rs1_addr_o         (rs1_addr_o         ),
     .rs2_addr_o         (rs2_addr_o         ),
     .rd_addr_o          (rd_addr_o          ),

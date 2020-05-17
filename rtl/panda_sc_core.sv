@@ -2,17 +2,17 @@
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // Panda Core <https://github.com/batuhanates/panda>
 
-module panda_sc_core #(
-  parameter int unsigned InstrMemDepth    = 32,
-  parameter              InstrMemInitFile = ""
-) (
+module panda_sc_core (
   input  logic        clk_i,
   input  logic        rst_ni,
-
+  // Data Memory Interface
   input  logic [31:0] data_rdata_i,
   output logic [31:0] data_wdata_o,
   output logic [31:0] data_addr_o,
-  output logic [ 3:0] data_we_o
+  output logic [ 3:0] data_we_o,
+  // Instruction Memory Interface
+  input  logic [31:0] instr_rdata_i,
+  output logic [31:0] instr_addr_o
 );
   import panda_pkg::*;
 
@@ -33,10 +33,9 @@ module panda_sc_core #(
   logic [31:0]   jump_target;
   logic          branch_cond;
 
-  panda_sc_controller #(
-    .InstrMemDepth   (InstrMemDepth   ),
-    .InstrMemInitFile(InstrMemInitFile)
-  ) i_controller (
+  assign instr_addr_o = pc;
+
+  panda_sc_controller i_controller (
     .clk_i              (clk_i            ),
     .rst_ni             (rst_ni           ),
     .rs1_addr_o         (rs1_addr         ),
@@ -54,7 +53,8 @@ module panda_sc_core #(
     .pc_inc_o           (pc_inc           ),
     .imm_o              (imm              ),
     .jump_target_i      (jump_target      ),
-    .branch_cond_i      (branch_cond      )
+    .branch_cond_i      (branch_cond      ),
+    .instr_i            (instr_rdata_i    )
   );
 
   panda_sc_datapath i_datapath (
