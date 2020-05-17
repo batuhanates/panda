@@ -34,30 +34,36 @@ module panda_sc_controller #(
 
   logic [31:0] instr;
   logic [31:0] imm;
+  logic [31:0] pc;
+  logic [31:0] branch_target;
 
   logic branch;
   logic jump;
 
-  logic [31:0] pc;
-  logic [31:0] pc_next;
-  logic [31:0] adder_input;
-  logic [31:0] adder_result;
+  assign imm_o = imm;
+  assign pc_o  = pc;
 
-  assign imm_o    = imm;
-  assign pc_o     = pc;
-  assign pc_inc_o = adder_result;
+  panda_pc #(
+    .Width(32)
+  ) i_pc (
+    .clk_i          (clk_i                 ),
+    .rst_ni         (rst_ni                ),
+    .branch_i       (branch & branch_cond_i),
+    .jump_i         (jump                  ),
+    .branch_target_i(branch_target         ),
+    .jump_target_i  (jump_target_i         ),
+    .pc_o           (pc                    ),
+    .pc_inc_o       (pc_inc_o              )
+  );
 
-  always_ff @(posedge clk_i or negedge rst_ni) begin : proc_pc
-    if(~rst_ni) begin
-      pc <= 0;
-    end else begin
-      pc <= pc_next;
-    end
-  end
-
-  assign adder_input  = branch & branch_cond_i ? imm : 32'd4;
-  assign adder_result = $unsigned(pc) + $unsigned(adder_input);
-  assign pc_next      = jump ? jump_target_i : adder_result;
+  panda_adder #(
+    .Width(32)
+  ) i_adder_branch (
+    .operand_a_i(pc           ),
+    .operand_b_i(imm          ),
+    .subtract_i (1'b0         ),
+    .result_o   (branch_target)
+  );
 
   localparam int unsigned AddrWidth = $clog2(InstrMemDepth);
 
