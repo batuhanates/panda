@@ -19,16 +19,33 @@ module panda_sc_core_tb ();
   logic [31:0] data_addr;
   logic [ 3:0] data_we;
 
-  panda_sc_core #(
-    .InstrMemDepth   (InstrMemDepth   ),
-    .InstrMemInitFile(InstrMemInitFile)
-  ) dut (
-    .clk_i       (clk       ),
-    .rst_ni      (rst_n     ),
-    .data_rdata_i(data_rdata),
-    .data_wdata_o(data_wdata),
-    .data_addr_o (data_addr ),
-    .data_we_o   (data_we   )
+  logic [31:0] instr_rdata;
+  logic [31:0] instr_addr;
+
+  panda_sc_core dut (
+    .clk_i        (clk        ),
+    .rst_ni       (rst_n      ),
+    .data_rdata_i (data_rdata ),
+    .data_wdata_o (data_wdata ),
+    .data_addr_o  (data_addr  ),
+    .data_we_o    (data_we    ),
+    .instr_rdata_i(instr_rdata),
+    .instr_addr_o (instr_addr )
+  );
+
+  panda_ram #(
+    .DataWidth (32              ),
+    .Depth     (InstrMemDepth   ),
+    .OutputReg (1'b0            ),
+    .WriteFirst(1'b0            ),
+    .InitFile  (InstrMemInitFile)
+  ) i_instruction_memory (
+    .clk_i (clk                                  ),
+    .ce_i  (1'b1                                 ),
+    .we_i  (4'b0                                 ),
+    .addr_i(instr_addr[$clog2(InstrMemDepth)+1:2]),
+    .data_i(32'b0                                ),
+    .data_o(instr_rdata                          )
   );
 
   panda_ram #(
