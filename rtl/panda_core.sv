@@ -22,9 +22,11 @@ module panda_core (
   logic [31:0] pc_inc_if;
 
   // IF/ID registers
-  logic [31:0] instr_if_id;
-  logic [31:0] pc_if_id;
-  logic [31:0] pc_inc_if_id;
+  struct {
+    logic [31:0] instr;
+    logic [31:0] pc;
+    logic [31:0] pc_inc;
+  } if_id;
 
   // ID stage outputs
   op_a_sel_e     op_a_sel_id;
@@ -49,22 +51,24 @@ module panda_core (
   logic        branch_cond_ex;
 
   // EX/MEM registers
-  logic [31:0]  pc_inc_ex_mem;
-  logic         lsu_store_ex_mem;
-  lsu_width_e   lsu_width_ex_mem;
-  logic         lsu_load_unsigned_ex_mem;
-  logic [31:0]  alu_result_ex_mem;
-  logic [31:0]  imm_ex_mem;
-  logic [31:0]  rs2_data_ex_mem;
-  rd_data_sel_e rd_data_sel_ex_mem;
-  logic [ 4:0]  rd_addr_ex_mem;
-  logic         rd_we_ex_mem;
+  struct {
+    logic [31:0]  pc_inc;
+    logic         lsu_store;
+    lsu_width_e   lsu_width;
+    logic         lsu_load_unsigned;
+    logic [31:0]  alu_result;
+    logic [31:0]  imm;
+    logic [31:0]  rs2_data;
+    rd_data_sel_e rd_data_sel;
+    logic [ 4:0]  rd_addr;
+    logic         rd_we;
+  } ex_mem;
 
   // MEM stage signals
   logic [31:0] load_data_mem;
 
   // WB stage signals
-  logic [31:0] rd_data;
+  logic [31:0] rd_data_wb;
 
   panda_if_stage i_if_stage (
     .clk_i          (clk_i          ),
@@ -82,23 +86,23 @@ module panda_core (
 
   always_ff @(posedge clk_i or negedge rst_ni) begin : proc_if_id
     if(~rst_ni) begin
-      instr_if_id  <= 0;
-      pc_if_id     <= 0;
-      pc_inc_if_id <= 0;
+      if_id.instr  <= 0;
+      if_id.pc     <= 0;
+      if_id.pc_inc <= 0;
     end else begin
-      instr_if_id  <= instr_if;
-      pc_if_id     <= pc_if;
-      pc_inc_if_id <= pc_inc_if;
+      if_id.instr  <= instr_if;
+      if_id.pc     <= pc_if;
+      if_id.pc_inc <= pc_inc_if;
     end
   end
 
   panda_id_stage i_id_stage (
     .clk_i              (clk_i               ),
     .rst_ni             (rst_ni              ),
-    .instr_i            (instr_if_id         ),
-    .rd_data_i          (rd_data             ),
-    .rd_addr_i          (rd_addr_ex_mem      ),
-    .rd_we_i            (rd_we_ex_mem        ),
+    .instr_i            (if_id.instr         ),
+    .rd_data_i          (rd_data_wb          ),
+    .rd_addr_i          (ex_mem.rd_addr      ),
+    .rd_we_i            (ex_mem.rd_we        ),
     .op_a_sel_o         (op_a_sel_id         ),
     .op_b_sel_o         (op_b_sel_id         ),
     .alu_operator_o     (alu_operator_id     ),
@@ -116,7 +120,7 @@ module panda_core (
   );
 
   panda_ex_stage i_ex_stage (
-    .pc_i          (pc_if_id       ),
+    .pc_i          (if_id.pc       ),
     .op_a_sel_i    (op_a_sel_id    ),
     .op_b_sel_i    (op_b_sel_id    ),
     .alu_operator_i(alu_operator_id),
@@ -131,36 +135,36 @@ module panda_core (
 
   always_ff @(posedge clk_i or negedge rst_ni) begin : proc_ex_mem
     if(~rst_ni) begin
-      pc_inc_ex_mem            <= 0;
-      lsu_store_ex_mem         <= 0;
-      lsu_width_ex_mem         <= lsu_width_e'(0);
-      lsu_load_unsigned_ex_mem <= 0;
-      alu_result_ex_mem        <= 0;
-      imm_ex_mem               <= 0;
-      rs2_data_ex_mem          <= 0;
-      rd_data_sel_ex_mem       <= rd_data_sel_e'(0);
-      rd_addr_ex_mem           <= 0;
-      rd_we_ex_mem             <= 0;
+      ex_mem.pc_inc            <= 0;
+      ex_mem.lsu_store         <= 0;
+      ex_mem.lsu_width         <= lsu_width_e'(0);
+      ex_mem.lsu_load_unsigned <= 0;
+      ex_mem.alu_result        <= 0;
+      ex_mem.imm               <= 0;
+      ex_mem.rs2_data          <= 0;
+      ex_mem.rd_data_sel       <= rd_data_sel_e'(0);
+      ex_mem.rd_addr           <= 0;
+      ex_mem.rd_we             <= 0;
     end else begin
-      pc_inc_ex_mem            <= pc_inc_if_id;
-      lsu_store_ex_mem         <= lsu_store_id;
-      lsu_width_ex_mem         <= lsu_width_id;
-      lsu_load_unsigned_ex_mem <= lsu_load_unsigned_id;
-      alu_result_ex_mem        <= alu_result_ex;
-      imm_ex_mem               <= imm_id;
-      rs2_data_ex_mem          <= rs2_data_id;
-      rd_data_sel_ex_mem       <= rd_data_sel_id;
-      rd_addr_ex_mem           <= rd_addr_id;
-      rd_we_ex_mem             <= rd_we_id;
+      ex_mem.pc_inc            <= if_id.pc_inc;
+      ex_mem.lsu_store         <= lsu_store_id;
+      ex_mem.lsu_width         <= lsu_width_id;
+      ex_mem.lsu_load_unsigned <= lsu_load_unsigned_id;
+      ex_mem.alu_result        <= alu_result_ex;
+      ex_mem.imm               <= imm_id;
+      ex_mem.rs2_data          <= rs2_data_id;
+      ex_mem.rd_data_sel       <= rd_data_sel_id;
+      ex_mem.rd_addr           <= rd_addr_id;
+      ex_mem.rd_we             <= rd_we_id;
     end
   end
 
   panda_lsu i_lsu (
-    .store_i        (lsu_store_ex_mem        ),
-    .load_unsigned_i(lsu_load_unsigned_ex_mem),
-    .width_i        (lsu_width_ex_mem        ),
-    .addr_i         (alu_result_ex_mem       ),
-    .store_data_i   (rs2_data_ex_mem         ),
+    .store_i        (ex_mem.lsu_store        ),
+    .load_unsigned_i(ex_mem.lsu_load_unsigned),
+    .width_i        (ex_mem.lsu_width        ),
+    .addr_i         (ex_mem.alu_result       ),
+    .store_data_i   (ex_mem.rs2_data         ),
     .load_data_o    (load_data_mem           ),
     .data_rdata_i   (data_rdata_i            ),
     .data_wdata_o   (data_wdata_o            ),
@@ -169,12 +173,12 @@ module panda_core (
   );
 
   always_comb begin : proc_rd_data_mux
-    unique case (rd_data_sel_ex_mem)
-      RD_DATA_ALU    : rd_data = alu_result_ex_mem;
-      RD_DATA_LOAD   : rd_data = load_data_mem;
-      RD_DATA_PC_INC : rd_data = pc_inc_ex_mem;
-      RD_DATA_IMM    : rd_data = imm_ex_mem;
-      default        : rd_data = alu_result_ex_mem;
+    unique case (ex_mem.rd_data_sel)
+      RD_DATA_ALU    : rd_data_wb = ex_mem.alu_result;
+      RD_DATA_LOAD   : rd_data_wb = load_data_mem;
+      RD_DATA_PC_INC : rd_data_wb = ex_mem.pc_inc;
+      RD_DATA_IMM    : rd_data_wb = ex_mem.imm;
+      default        : rd_data_wb = ex_mem.alu_result;
     endcase
   end
 
