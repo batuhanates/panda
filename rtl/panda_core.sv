@@ -17,9 +17,11 @@ module panda_core (
   import panda_pkg::*;
 
   // IF stage outputs
-  logic [31:0] instr_if;
-  logic [31:0] pc_if;
-  logic [31:0] pc_inc_if;
+  struct {
+    logic [31:0] instr;
+    logic [31:0] pc;
+    logic [31:0] pc_inc;
+  } ifo;
 
   // IF/ID registers
   struct {
@@ -29,26 +31,30 @@ module panda_core (
   } if_id;
 
   // ID stage outputs
-  op_a_sel_e     op_a_sel_id;
-  op_b_sel_e     op_b_sel_id;
-  alu_operator_e alu_operator_id;
-  logic [31:0]   imm_id;
-  logic [31:0]   rs1_data_id;
-  logic [31:0]   rs2_data_id;
-  rd_data_sel_e  rd_data_sel_id;
-  logic [ 4:0]   rd_addr_id;
-  logic          rd_we_id;
-  logic          lsu_store_id;
-  lsu_width_e    lsu_width_id;
-  logic          lsu_load_unsigned_id;
-  logic          branch_id;
-  logic          jump_id;
+  struct {
+    op_a_sel_e     op_a_sel;
+    op_b_sel_e     op_b_sel;
+    alu_operator_e alu_operator;
+    logic [31:0]   imm;
+    logic [31:0]   rs1_data;
+    logic [31:0]   rs2_data;
+    rd_data_sel_e  rd_data_sel;
+    logic [ 4:0]   rd_addr;
+    logic          rd_we;
+    logic          lsu_store;
+    lsu_width_e    lsu_width;
+    logic          lsu_load_unsigned;
+    logic          branch;
+    logic          jump;
+  } ido;
 
   // EX stage outputs
-  logic [31:0] alu_result_ex;
-  logic [31:0] jump_target_ex;
-  logic [31:0] branc_target_ex;
-  logic        branch_cond_ex;
+  struct {
+    logic [31:0] alu_result;
+    logic [31:0] jump_target;
+    logic [31:0] branch_target;
+    logic        branch_cond;
+  } exo;
 
   // EX/MEM registers
   struct {
@@ -71,20 +77,20 @@ module panda_core (
   logic [31:0] rd_data_wb;
 
   logic branch;
-  assign branch = branch_id & branch_cond_ex;
+  assign branch = ido.branch & exo.branch_cond;
 
   panda_if_stage i_if_stage (
-    .clk_i          (clk_i          ),
-    .rst_ni         (rst_ni         ),
-    .instr_rdata_i  (instr_rdata_i  ),
-    .instr_addr_o   (instr_addr_o   ),
-    .branch_i       (branch         ),
-    .jump_i         (jump_id        ),
-    .branch_target_i(branc_target_ex),
-    .jump_target_i  (jump_target_ex ),
-    .instr_o        (instr_if       ),
-    .pc_o           (pc_if          ),
-    .pc_inc_o       (pc_inc_if      )
+    .clk_i          (clk_i            ),
+    .rst_ni         (rst_ni           ),
+    .instr_rdata_i  (instr_rdata_i    ),
+    .instr_addr_o   (instr_addr_o     ),
+    .branch_i       (branch           ),
+    .jump_i         (ido.jump         ),
+    .branch_target_i(exo.branch_target),
+    .jump_target_i  (exo.jump_target  ),
+    .instr_o        (ifo.instr        ),
+    .pc_o           (ifo.pc           ),
+    .pc_inc_o       (ifo.pc_inc       )
   );
 
   always_ff @(posedge clk_i or negedge rst_ni) begin : proc_if_id
@@ -93,47 +99,47 @@ module panda_core (
       if_id.pc     <= 0;
       if_id.pc_inc <= 0;
     end else begin
-      if_id.instr  <= instr_if;
-      if_id.pc     <= pc_if;
-      if_id.pc_inc <= pc_inc_if;
+      if_id.instr  <= ifo.instr;
+      if_id.pc     <= ifo.pc;
+      if_id.pc_inc <= ifo.pc_inc;
     end
   end
 
   panda_id_stage i_id_stage (
-    .clk_i              (clk_i               ),
-    .rst_ni             (rst_ni              ),
-    .instr_i            (if_id.instr         ),
-    .rd_data_i          (rd_data_wb          ),
-    .rd_addr_i          (ex_mem.rd_addr      ),
-    .rd_we_i            (ex_mem.rd_we        ),
-    .op_a_sel_o         (op_a_sel_id         ),
-    .op_b_sel_o         (op_b_sel_id         ),
-    .alu_operator_o     (alu_operator_id     ),
-    .imm_o              (imm_id              ),
-    .rs1_data_o         (rs1_data_id         ),
-    .rs2_data_o         (rs2_data_id         ),
-    .rd_data_sel_o      (rd_data_sel_id      ),
-    .rd_addr_o          (rd_addr_id          ),
-    .rd_we_o            (rd_we_id            ),
-    .lsu_store_o        (lsu_store_id        ),
-    .lsu_width_o        (lsu_width_id        ),
-    .lsu_load_unsigned_o(lsu_load_unsigned_id),
-    .branch_o           (branch_id           ),
-    .jump_o             (jump_id             )
+    .clk_i              (clk_i                ),
+    .rst_ni             (rst_ni               ),
+    .instr_i            (if_id.instr          ),
+    .rd_data_i          (rd_data_wb           ),
+    .rd_addr_i          (ex_mem.rd_addr       ),
+    .rd_we_i            (ex_mem.rd_we         ),
+    .op_a_sel_o         (ido.op_a_sel         ),
+    .op_b_sel_o         (ido.op_b_sel         ),
+    .alu_operator_o     (ido.alu_operator     ),
+    .imm_o              (ido.imm              ),
+    .rs1_data_o         (ido.rs1_data         ),
+    .rs2_data_o         (ido.rs2_data         ),
+    .rd_data_sel_o      (ido.rd_data_sel      ),
+    .rd_addr_o          (ido.rd_addr          ),
+    .rd_we_o            (ido.rd_we            ),
+    .lsu_store_o        (ido.lsu_store        ),
+    .lsu_width_o        (ido.lsu_width        ),
+    .lsu_load_unsigned_o(ido.lsu_load_unsigned),
+    .branch_o           (ido.branch           ),
+    .jump_o             (ido.jump             )
   );
 
   panda_ex_stage i_ex_stage (
-    .pc_i          (if_id.pc       ),
-    .op_a_sel_i    (op_a_sel_id    ),
-    .op_b_sel_i    (op_b_sel_id    ),
-    .alu_operator_i(alu_operator_id),
-    .imm_i         (imm_id         ),
-    .rs1_data_i    (rs1_data_id    ),
-    .rs2_data_i    (rs2_data_id    ),
-    .alu_result_o  (alu_result_ex  ),
-    .jump_target_o (jump_target_ex ),
-    .branc_target_o(branc_target_ex),
-    .branch_cond_o (branch_cond_ex )
+    .pc_i          (if_id.pc         ),
+    .op_a_sel_i    (ido.op_a_sel     ),
+    .op_b_sel_i    (ido.op_b_sel     ),
+    .alu_operator_i(ido.alu_operator ),
+    .imm_i         (ido.imm          ),
+    .rs1_data_i    (ido.rs1_data     ),
+    .rs2_data_i    (ido.rs2_data     ),
+    .alu_result_o  (exo.alu_result   ),
+    .jump_target_o (exo.jump_target  ),
+    .branc_target_o(exo.branch_target),
+    .branch_cond_o (exo.branch_cond  )
   );
 
   always_ff @(posedge clk_i or negedge rst_ni) begin : proc_ex_mem
@@ -150,15 +156,15 @@ module panda_core (
       ex_mem.rd_we             <= 0;
     end else begin
       ex_mem.pc_inc            <= if_id.pc_inc;
-      ex_mem.lsu_store         <= lsu_store_id;
-      ex_mem.lsu_width         <= lsu_width_id;
-      ex_mem.lsu_load_unsigned <= lsu_load_unsigned_id;
-      ex_mem.alu_result        <= alu_result_ex;
-      ex_mem.imm               <= imm_id;
-      ex_mem.rs2_data          <= rs2_data_id;
-      ex_mem.rd_data_sel       <= rd_data_sel_id;
-      ex_mem.rd_addr           <= rd_addr_id;
-      ex_mem.rd_we             <= rd_we_id;
+      ex_mem.lsu_store         <= ido.lsu_store;
+      ex_mem.lsu_width         <= ido.lsu_width;
+      ex_mem.lsu_load_unsigned <= ido.lsu_load_unsigned;
+      ex_mem.alu_result        <= exo.alu_result;
+      ex_mem.imm               <= ido.imm;
+      ex_mem.rs2_data          <= ido.rs2_data;
+      ex_mem.rd_data_sel       <= ido.rd_data_sel;
+      ex_mem.rd_addr           <= ido.rd_addr;
+      ex_mem.rd_we             <= ido.rd_we;
     end
   end
 
