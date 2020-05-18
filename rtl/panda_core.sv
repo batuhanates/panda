@@ -70,12 +70,15 @@ module panda_core (
   // WB stage signals
   logic [31:0] rd_data_wb;
 
+  logic branch;
+  assign branch = branch_id & branch_cond_ex;
+
   panda_if_stage i_if_stage (
     .clk_i          (clk_i          ),
     .rst_ni         (rst_ni         ),
     .instr_rdata_i  (instr_rdata_i  ),
     .instr_addr_o   (instr_addr_o   ),
-    .branch_i       (branch_id      ),
+    .branch_i       (branch         ),
     .jump_i         (jump_id        ),
     .branch_target_i(branc_target_ex),
     .jump_target_i  (jump_target_ex ),
