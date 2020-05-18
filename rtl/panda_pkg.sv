@@ -38,4 +38,35 @@ package panda_pkg;
     OPCODE_SYSTEM   = 7'b1110011
   } opcode_e;
 
+  typedef enum logic [3:0] {
+    IMM_I,
+    IMM_S,
+    IMM_B,
+    IMM_U,
+    IMM_J
+  } imm_sel_e;
+
+  typedef enum logic {
+    OP_A_RS1,
+    OP_A_PC
+  } op_a_sel_e;
+
+  typedef enum logic {
+    OP_B_RS2,
+    OP_B_IMM
+  } op_b_sel_e;
+
+  typedef enum logic [1:0] {
+    RD_DATA_ALU,
+    RD_DATA_LOAD,
+    RD_DATA_PC_INC,
+    RD_DATA_IMM
+  } rd_data_sel_e;
+
+  typedef enum logic [1:0] {
+    LSU_WIDTH_BYTE,
+    LSU_WIDTH_HALF,
+    LSU_WIDTH_WORD
+  } lsu_width_e;
+
 endpackage
