@@ -47,7 +47,7 @@ module panda_decoder (
   assign imm_s_type = {{21{instr_i[31]}}, instr_i[30:25], instr_i[11:7]};
   assign imm_b_type = {{20{instr_i[31]}}, instr_i[7], instr_i[30:25], instr_i[11:8], 1'b0};
   assign imm_u_type = {instr_i[31:12], 12'b0};
-  assign imm_j_type = {{19{instr_i[31]}}, instr_i[19:12], instr_i[20], instr_i[30:21], 1'b0};
+  assign imm_j_type = {{12{instr_i[31]}}, instr_i[19:12], instr_i[20], instr_i[30:21], 1'b0};
 
   always_comb begin : proc_imm_mux
     unique case (imm_sel)
