@@ -8,7 +8,9 @@ module panda_alu #(
   input  panda_pkg::alu_operator_e operator_i,
   input  logic [Width-1:0]         operand_a_i,
   input  logic [Width-1:0]         operand_b_i,
-  output logic [Width-1:0]         result_o
+  output logic [Width-1:0]         result_o,
+  output logic [Width-1:0]         jump_target_o,
+  output logic                     branch_cond_o
 );
   import panda_pkg::*;
 
@@ -128,5 +130,8 @@ module panda_alu #(
       default : ;
     endcase
   end : proc_result_mux
+
+  assign jump_target_o = {adder_result[Width-1:1], 1'b0};
+  assign branch_cond_o = cmp_result;
 
 endmodule
