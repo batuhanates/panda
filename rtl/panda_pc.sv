@@ -16,26 +16,26 @@ module panda_pc #(
 );
 
   logic [Width-1:0] pc;
+  logic [Width-1:0] pc_temp;
   logic [Width-1:0] pc_inc;
-  logic [Width-1:0] pc_next;
 
-  assign pc_o     = pc;
+  assign pc_o     = pc_temp;
   assign pc_inc_o = pc_inc;
 
-  assign pc_next = jump_i ? jump_target_i : (branch_i ? branch_target_i : pc_inc);
+  assign pc_temp = jump_i ? jump_target_i : (branch_i ? branch_target_i : pc);
 
   always_ff @(posedge clk_i or negedge rst_ni) begin : proc_pc
     if(~rst_ni) begin
       pc <= 0;
     end else begin
-      pc <= pc_next;
+      pc <= pc_inc;
     end
   end
 
   panda_adder #(
     .Width(Width)
   ) i_adder_inc (
-    .operand_a_i(pc       ),
+    .operand_a_i(pc_temp  ),
     .operand_b_i(Width'(4)),
     .subtract_i (1'b0     ),
     .result_o   (pc_inc   )
