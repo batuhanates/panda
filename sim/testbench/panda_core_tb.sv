@@ -4,7 +4,7 @@
 
 module panda_core_tb ();
 
-  parameter int unsigned InstrMemDepth = 32;
+  parameter int unsigned InstrMemDepth = 128;
   parameter InstrMemInitFile = "test_instr.mem";
   parameter int unsigned DataMemDepth = 32;
   parameter DataMemInitFile = "";
