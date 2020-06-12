@@ -65,6 +65,7 @@ module panda_ex_stage (
       ex_mem_o.lsu_load_unsigned <= 0;
       ex_mem_o.imm               <= 0;
       ex_mem_o.rs2_data          <= 0;
+      ex_mem_o.rs2_addr          <= 0;
     end else begin
       ex_mem_o.alu_result        <= alu_result;
       ex_mem_o.pc_inc            <= id_ex_i.pc_inc;
@@ -76,6 +77,7 @@ module panda_ex_stage (
       ex_mem_o.lsu_load_unsigned <= id_ex_i.lsu_load_unsigned;
       ex_mem_o.imm               <= id_ex_i.imm;
       ex_mem_o.rs2_data          <= id_ex_i.rs2_data;
+      ex_mem_o.rs2_addr          <= id_ex_i.rs2_addr;
     end
   end
 
