@@ -75,6 +75,7 @@ module panda_id_stage (
       id_ex_o.alu_operator      <= alu_operator_e'(0);
       id_ex_o.rs1_data          <= 0;
       id_ex_o.rs2_data          <= 0;
+      id_ex_o.rs1_addr          <= 0;
       id_ex_o.rs2_addr          <= 0;
       id_ex_o.imm               <= 0;
       id_ex_o.rd_data_sel       <= rd_data_sel_e'(0);
@@ -93,6 +94,7 @@ module panda_id_stage (
       id_ex_o.alu_operator      <= alu_operator;
       id_ex_o.rs1_data          <= rs1_data;
       id_ex_o.rs2_data          <= rs2_data;
+      id_ex_o.rs1_addr          <= rs1_addr;
       id_ex_o.rs2_addr          <= rs2_addr;
       id_ex_o.imm               <= imm;
       id_ex_o.rd_data_sel       <= rd_data_sel;

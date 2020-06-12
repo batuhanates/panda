@@ -86,6 +86,7 @@ package panda_pkg;
     logic [31:0]   imm;
     logic [31:0]   rs1_data;
     logic [31:0]   rs2_data;
+    logic [ 4:0]   rs1_addr;
     logic [ 4:0]   rs2_addr;
     rd_data_sel_e  rd_data_sel;
     logic [ 4:0]   rd_addr;
