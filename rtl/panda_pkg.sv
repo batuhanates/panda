@@ -69,4 +69,58 @@ package panda_pkg;
     LSU_WIDTH_WORD
   } lsu_width_e;
 
+  /*==================================================
+  =            Pipeline Register Typedefs            =
+  ==================================================*/
+
+  typedef struct {
+    logic [31:0] instr;
+    logic [31:0] pc;
+    logic [31:0] pc_inc;
+  } if_id_t;
+
+  typedef struct {
+    op_a_sel_e     op_a_sel;
+    op_b_sel_e     op_b_sel;
+    alu_operator_e alu_operator;
+    logic [31:0]   imm;
+    logic [31:0]   rs1_data;
+    logic [31:0]   rs2_data;
+    rd_data_sel_e  rd_data_sel;
+    logic [ 4:0]   rd_addr;
+    logic          rd_we;
+    logic          lsu_store;
+    lsu_width_e    lsu_width;
+    logic          lsu_load_unsigned;
+    logic          branch;
+    logic          jump;
+    logic [31:0]   pc;
+    logic [31:0]   pc_inc;
+  } id_ex_t;
+
+  typedef struct {
+    logic [31:0]  pc_inc;
+    logic         lsu_store;
+    lsu_width_e   lsu_width;
+    logic         lsu_load_unsigned;
+    logic [31:0]  alu_result;
+    logic [31:0]  imm;
+    logic [31:0]  rs2_data;
+    rd_data_sel_e rd_data_sel;
+    logic [ 4:0]  rd_addr;
+    logic         rd_we;
+  } ex_mem_t;
+
+  typedef struct {
+    logic [31:0]  pc_inc;
+    logic [31:0]  alu_result;
+    logic [31:0]  load_data;
+    logic [31:0]  imm;
+    rd_data_sel_e rd_data_sel;
+    logic [ 4:0]  rd_addr;
+    logic         rd_we;
+  } mem_wb_t;
+
+  /*=====  End of Pipeline Register Typedefs  ======*/
+
 endpackage
