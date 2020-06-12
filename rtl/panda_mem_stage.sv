@@ -21,7 +21,7 @@ module panda_mem_stage (
 
   // Check for memory to memory copy
   always_comb begin
-    if (ex_mem_i.rs2_addr == mem_wb_o.rd_addr) begin
+    if (ex_mem_i.rs2_addr == mem_wb_o.rd_addr && mem_wb_o.rd_addr != 5'b0) begin
       store_data = mem_wb_o.load_data;
     end else begin
       store_data = ex_mem_i.rs2_data;
