@@ -13,8 +13,8 @@ module panda_ex_stage (
   output logic [31:0]        branch_target_o,
   output logic               branch_cond_o,
 
-  input  logic [ 1:0]        forward_rs1_i,
-  input  logic [ 1:0]        forward_rs2_i,
+  input  logic [ 4:0]        rd_addr_i,
+  input  logic               rd_we_i,
   input  logic [31:0]        rd_data_i
 );
   import panda_pkg::*;
@@ -27,6 +27,20 @@ module panda_ex_stage (
   logic [31:0] rs1_data;
   logic [31:0] rs2_data;
 
+  logic [1:0] forward_rs1;
+  logic [1:0] forward_rs2;
+
+  panda_forward_unit i_forward_unit (
+    .rs1_addr_i   (id_ex_i.rs1_addr),
+    .rs2_addr_i   (id_ex_i.rs2_addr),
+    .rd_addr_ex_i (ex_mem_o.rd_addr),
+    .rd_we_ex_i   (ex_mem_o.rd_we  ),
+    .rd_addr_mem_i(rd_addr_i       ),
+    .rd_we_mem_i  (rd_we_i         ),
+    .forward_rs1_o(forward_rs1     ),
+    .forward_rs2_o(forward_rs2     )
+  );
+
   always_comb begin : proc_forward
     unique case (ex_mem_o.rd_data_sel)
       RD_DATA_ALU    : rd_data_ex = ex_mem_o.alu_result;
@@ -35,14 +49,14 @@ module panda_ex_stage (
       default        : rd_data_ex = ex_mem_o.alu_result;
     endcase
 
-    unique case (forward_rs1_i)
+    unique case (forward_rs1)
       2'b00   : rs1_data = id_ex_i.rs1_data;
       2'b01   : rs1_data = rd_data_ex;
       2'b10   : rs1_data = rd_data_i;
       default : rs1_data = id_ex_i.rs1_data;
     endcase
 
-    unique case (forward_rs2_i)
+    unique case (forward_rs2)
       2'b00   : rs2_data = id_ex_i.rs1_data;
       2'b01   : rs2_data = rd_data_ex;
       2'b10   : rs2_data = rd_data_i;

@@ -28,9 +28,6 @@ module panda_core (
 
   logic [31:0] rd_data;
 
-  logic [1:0] forward_rs1;
-  logic [1:0] forward_rs2;
-
   assign branch = id_ex.branch & branch_cond;
 
   panda_if_stage i_if_stage (
@@ -56,16 +53,16 @@ module panda_core (
   );
 
   panda_ex_stage i_ex_stage (
-    .clk_i          (clk_i        ),
-    .rst_ni         (rst_ni       ),
-    .id_ex_i        (id_ex        ),
-    .ex_mem_o       (ex_mem       ),
-    .jump_target_o  (jump_target  ),
-    .branch_target_o(branch_target),
-    .branch_cond_o  (branch_cond  ),
-    .forward_rs1_i  (forward_rs1  ),
-    .forward_rs2_i  (forward_rs2  ),
-    .rd_data_i      (rd_data      )
+    .clk_i          (clk_i         ),
+    .rst_ni         (rst_ni        ),
+    .id_ex_i        (id_ex         ),
+    .ex_mem_o       (ex_mem        ),
+    .jump_target_o  (jump_target   ),
+    .branch_target_o(branch_target ),
+    .branch_cond_o  (branch_cond   ),
+    .rd_addr_i      (mem_wb.rd_addr),
+    .rd_we_i        (mem_wb.rd_we  ),
+    .rd_data_i      (rd_data       )
   );
 
   panda_mem_stage i_mem_stage (
@@ -88,16 +85,5 @@ module panda_core (
       default        : rd_data = mem_wb.alu_result;
     endcase
   end
-
-  panda_forward_unit i_forward_unit (
-    .rs1_addr_i   (id_ex.rs1_addr),
-    .rs2_addr_i   (id_ex.rs2_addr),
-    .rd_addr_ex_i (ex_mem.rd_addr),
-    .rd_we_ex_i   (ex_mem.rd_we  ),
-    .rd_addr_mem_i(mem_wb.rd_addr),
-    .rd_we_mem_i  (mem_wb.rd_we  ),
-    .forward_rs1_o(forward_rs1   ),
-    .forward_rs2_o(forward_rs2   )
-  );
 
 endmodule
