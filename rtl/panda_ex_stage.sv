@@ -11,7 +11,11 @@ module panda_ex_stage (
 
   output logic [31:0]        jump_target_o,
   output logic [31:0]        branch_target_o,
-  output logic               branch_cond_o
+  output logic               branch_cond_o,
+
+  input  logic [ 1:0]        forward_rs1_i,
+  input  logic [ 1:0]        forward_rs2_i,
+  input  logic [31:0]        rd_data_i
 );
   import panda_pkg::*;
 
@@ -19,17 +23,44 @@ module panda_ex_stage (
   logic [31:0] alu_operand_a;
   logic [31:0] alu_operand_b;
 
+  logic [31:0] rd_data_ex;
+  logic [31:0] rs1_data;
+  logic [31:0] rs2_data;
+
+  always_comb begin : proc_forward
+    unique case (ex_mem_o.rd_data_sel)
+      RD_DATA_ALU    : rd_data_ex = ex_mem_o.alu_result;
+      RD_DATA_PC_INC : rd_data_ex = ex_mem_o.pc_inc;
+      RD_DATA_IMM    : rd_data_ex = ex_mem_o.imm;
+      default        : rd_data_ex = ex_mem_o.alu_result;
+    endcase
+
+    unique case (forward_rs1_i)
+      2'b00   : rs1_data = id_ex_i.rs1_data;
+      2'b01   : rs1_data = rd_data_ex;
+      2'b10   : rs1_data = rd_data_i;
+      default : rs1_data = id_ex_i.rs1_data;
+    endcase
+
+    unique case (forward_rs2_i)
+      2'b00   : rs2_data = id_ex_i.rs1_data;
+      2'b01   : rs2_data = rd_data_ex;
+      2'b10   : rs2_data = rd_data_i;
+      default : rs2_data = id_ex_i.rs2_data;
+    endcase
+  end
+
   always_comb begin : proc_alu_operands
     unique case (id_ex_i.op_a_sel)
-      OP_A_RS1 : alu_operand_a = id_ex_i.rs1_data;
+      OP_A_RS1 : alu_operand_a = rs1_data;
       OP_A_PC  : alu_operand_a = id_ex_i.pc;
-      default  : alu_operand_a = id_ex_i.rs1_data;
+      default  : alu_operand_a = rs1_data;
     endcase
 
     unique case (id_ex_i.op_b_sel)
-      OP_B_RS2 : alu_operand_b = id_ex_i.rs2_data;
+      OP_B_RS2 : alu_operand_b = rs2_data;
       OP_B_IMM : alu_operand_b = id_ex_i.imm;
-      default  : alu_operand_b = id_ex_i.rs2_data;
+      default  : alu_operand_b = rs2_data;
     endcase
   end
 
@@ -76,7 +107,7 @@ module panda_ex_stage (
       ex_mem_o.lsu_width         <= id_ex_i.lsu_width;
       ex_mem_o.lsu_load_unsigned <= id_ex_i.lsu_load_unsigned;
       ex_mem_o.imm               <= id_ex_i.imm;
-      ex_mem_o.rs2_data          <= id_ex_i.rs2_data;
+      ex_mem_o.rs2_data          <= rs2_data;
       ex_mem_o.rs2_addr          <= id_ex_i.rs2_addr;
     end
   end
