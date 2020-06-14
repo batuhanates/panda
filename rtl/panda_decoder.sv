@@ -69,8 +69,8 @@ module panda_decoder (
     branch_o    = 1'b0;
     jump_o      = 1'b0;
 
-    op_a_sel_o     = OP_A_RS1;
-    op_b_sel_o     = OP_B_RS2;
+    op_a_sel_o     = OP_A_PC;
+    op_b_sel_o     = OP_B_IMM;
     rd_data_sel_o  = RD_DATA_ALU;
     alu_operator_o = ALU_ADD;
     imm_sel        = IMM_I;
