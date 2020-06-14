@@ -5,6 +5,7 @@
 module panda_if_stage (
   input  logic              clk_i,
   input  logic              rst_ni,
+  input  logic              stall_i,
 
   output panda_pkg::if_id_t if_id_o,
 
@@ -26,6 +27,7 @@ module panda_if_stage (
   ) i_pc (
     .clk_i          (clk_i          ),
     .rst_ni         (rst_ni         ),
+    .stall_i        (stall_i        ),
     .branch_i       (branch_i       ),
     .jump_i         (jump_i         ),
     .branch_target_i(branch_target_i),
@@ -39,7 +41,7 @@ module panda_if_stage (
       if_id_o.instr  <= 0;
       if_id_o.pc     <= 0;
       if_id_o.pc_inc <= 0;
-    end else begin
+    end else if (~stall_i) begin
       if_id_o.instr  <= instr_rdata_i;
       if_id_o.pc     <= pc;
       if_id_o.pc_inc <= pc_inc;

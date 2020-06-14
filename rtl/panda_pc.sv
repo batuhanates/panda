@@ -7,6 +7,8 @@ module panda_pc #(
 ) (
   input  logic             clk_i,
   input  logic             rst_ni,
+  input  logic             stall_i,
+
   input  logic             branch_i,
   input  logic             jump_i,
   input  logic [Width-1:0] branch_target_i,
@@ -27,7 +29,7 @@ module panda_pc #(
   always_ff @(posedge clk_i or negedge rst_ni) begin : proc_pc
     if(~rst_ni) begin
       pc <= 0;
-    end else begin
+    end else if (~stall_i) begin
       pc <= pc_inc;
     end
   end
