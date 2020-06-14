@@ -5,13 +5,16 @@
 module panda_id_stage (
   input  logic              clk_i,
   input  logic              rst_ni,
+  input  logic              bubble_i,
 
   input  panda_pkg::if_id_t if_id_i,
   output panda_pkg::id_ex_t id_ex_o,
 
   input  logic [31:0]       rd_data_i,
   input  logic [ 4:0]       rd_addr_i,
-  input  logic              rd_we_i
+  input  logic              rd_we_i,
+
+  output logic              load_use_hazard_o
 );
   import panda_pkg::*;
 
@@ -69,7 +72,7 @@ module panda_id_stage (
   );
 
   always_ff @(posedge clk_i or negedge rst_ni) begin : proc_id_ex
-    if(~rst_ni) begin
+    if(~rst_ni | bubble_i) begin
       id_ex_o.op_a_sel          <= op_a_sel_e'(0);
       id_ex_o.op_b_sel          <= op_b_sel_e'(0);
       id_ex_o.alu_operator      <= alu_operator_e'(0);
@@ -109,5 +112,10 @@ module panda_id_stage (
       id_ex_o.pc_inc            <= if_id_i.pc_inc;
     end
   end
+
+  assign load_use_hazard_o = (id_ex_o.rd_data_sel == RD_DATA_LOAD) &
+    (rs1_addr == id_ex_o.rd_addr & op_a_sel == OP_A_RS1 |
+      rs2_addr == id_ex_o.rd_addr & op_b_sel == OP_B_RS2) &
+    (id_ex_o.rd_addr != 5'b0);
 
 endmodule
