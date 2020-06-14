@@ -28,11 +28,17 @@ module panda_core (
 
   logic [31:0] rd_data;
 
+  logic load_use_hazard;
+
+  logic stall_if;
+  logic bubble_id;
+
   assign branch = id_ex.branch & branch_cond;
 
   panda_if_stage i_if_stage (
     .clk_i          (clk_i        ),
     .rst_ni         (rst_ni       ),
+    .stall_i        (stall_if     ),
     .if_id_o        (if_id        ),
     .instr_rdata_i  (instr_rdata_i),
     .instr_addr_o   (instr_addr_o ),
@@ -43,13 +49,15 @@ module panda_core (
   );
 
   panda_id_stage i_id_stage (
-    .clk_i    (clk_i         ),
-    .rst_ni   (rst_ni        ),
-    .if_id_i  (if_id         ),
-    .id_ex_o  (id_ex         ),
-    .rd_data_i(rd_data       ),
-    .rd_addr_i(mem_wb.rd_addr),
-    .rd_we_i  (mem_wb.rd_we  )
+    .clk_i            (clk_i          ),
+    .rst_ni           (rst_ni         ),
+    .bubble_i         (bubble_id      ),
+    .if_id_i          (if_id          ),
+    .id_ex_o          (id_ex          ),
+    .rd_data_i        (rd_data        ),
+    .rd_addr_i        (mem_wb.rd_addr ),
+    .rd_we_i          (mem_wb.rd_we   ),
+    .load_use_hazard_o(load_use_hazard)
   );
 
   panda_ex_stage i_ex_stage (
@@ -85,5 +93,11 @@ module panda_core (
       default        : rd_data = mem_wb.alu_result;
     endcase
   end
+
+  panda_controller i_controller (
+    .load_use_hazard_i(load_use_hazard),
+    .stall_if_o       (stall_if       ),
+    .bubble_id_o      (bubble_id      )
+  );
 
 endmodule
