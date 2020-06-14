@@ -6,6 +6,7 @@ module panda_if_stage (
   input  logic              clk_i,
   input  logic              rst_ni,
   input  logic              stall_i,
+  input  logic              flush_i,
 
   output panda_pkg::if_id_t if_id_o,
 
@@ -42,7 +43,7 @@ module panda_if_stage (
       if_id_o.pc     <= 0;
       if_id_o.pc_inc <= 0;
     end else if (~stall_i) begin
-      if_id_o.instr  <= instr_rdata_i;
+      if_id_o.instr  <= flush_i ? 32'h13 : instr_rdata_i; // Put NOP for flush
       if_id_o.pc     <= pc;
       if_id_o.pc_inc <= pc_inc;
     end
