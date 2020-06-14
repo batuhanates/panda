@@ -8,13 +8,13 @@ module panda_alu #(
   input  panda_pkg::alu_operator_e operator_i,
   input  logic [Width-1:0]         operand_a_i,
   input  logic [Width-1:0]         operand_b_i,
-  output logic [Width-1:0]         result_o,
-  output logic [Width-1:0]         jump_target_o,
-  output logic                     branch_cond_o
+  output logic [Width-1:0]         result_o
 );
   import panda_pkg::*;
 
-  /* Adder */
+  /*=============================
+  =            Adder            =
+  =============================*/
   logic             adder_sub;
   logic [Width-1:0] adder_result;
 
@@ -23,13 +23,9 @@ module panda_alu #(
     adder_sub = 1'b0;
     unique case (operator_i)
       ALU_SUB,
-      ALU_EQ,
-      ALU_NE,
-      ALU_LT,
-      ALU_LTU,
-      ALU_GE,
-      ALU_GEU : adder_sub = 1'b1;
-      default : ;
+      ALU_SLT,
+      ALU_SLTU : adder_sub = 1'b1;
+      default  : ;
     endcase
   end
 
@@ -41,25 +37,16 @@ module panda_alu #(
     .subtract_i (adder_sub   ),
     .result_o   (adder_result)
   );
-  /* END Adder */
+  /*=====  End of Adder  ======*/
 
-  /* Comparator */
+  /*==================================
+  =            Comparator            =
+  ==================================*/
   logic cmp_signed;
-  logic is_equal;
   logic is_less;
-  logic cmp_result;
 
-  always_comb begin
-    cmp_signed = 1'b0;
-    unique case (operator_i)
-      ALU_LT,
-      ALU_GE  : cmp_signed = 1'b1;
-      default : ;
-    endcase
-  end
+  assign cmp_signed = operator_i == ALU_SLT;
 
-  // The comparator only outputs equal and less since not_equal and
-  // greater_equal can be obtained by negating those.
   panda_comparator_sub #(
     .Width(Width)
   ) i_comparator (
@@ -67,25 +54,13 @@ module panda_alu #(
     .msb_a_i     (operand_a_i[Width-1]),
     .msb_b_i     (operand_b_i[Width-1]),
     .sign_i      (cmp_signed          ),
-    .is_equal_o  (is_equal            ),
     .is_less_o   (is_less             )
   );
+  /*=====  End of Comparator  ======*/
 
-  always_comb begin
-    cmp_result = is_equal;
-    unique case (operator_i)
-      ALU_EQ  : cmp_result = is_equal;
-      ALU_NE  : cmp_result = ~is_equal;
-      ALU_LT,
-      ALU_LTU : cmp_result = is_less;
-      ALU_GE,
-      ALU_GEU : cmp_result = ~is_less;
-      default : ;
-    endcase
-  end
-  /* END Comparator */
-
-  /* Shifer */
+  /*===============================
+  =            Shifter            =
+  ===============================*/
   logic                     shift_left;
   logic                     shift_arithmetic;
   logic [$clog2(Width)-1:0] shift_amount;
@@ -104,7 +79,7 @@ module panda_alu #(
     .amount_i    (shift_amount    ),
     .result_o    (shift_result    )
   );
-  /* END Shifer */
+  /*=====  End of Shifter  ======*/
 
   always_comb begin : proc_result_mux
     result_o = '0;
@@ -120,18 +95,11 @@ module panda_alu #(
       ALU_SRL,
       ALU_SRA : result_o = shift_result;
 
-      ALU_EQ,
-      ALU_NE,
-      ALU_LT,
-      ALU_LTU,
-      ALU_GE,
-      ALU_GEU : result_o = {{Width-1{1'b0}}, cmp_result};
+      ALU_SLT,
+      ALU_SLTU : result_o = {{Width-1{1'b0}}, is_less};
 
       default : ;
     endcase
-  end : proc_result_mux
-
-  assign jump_target_o = {adder_result[Width-1:1], 1'b0};
-  assign branch_cond_o = cmp_result;
+  end
 
 endmodule

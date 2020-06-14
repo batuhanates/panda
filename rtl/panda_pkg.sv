@@ -16,12 +16,8 @@ package panda_pkg;
     ALU_SRL,
     ALU_SRA,
 
-    ALU_EQ,
-    ALU_NE,
-    ALU_LT,
-    ALU_LTU,
-    ALU_GE,
-    ALU_GEU
+    ALU_SLT,
+    ALU_SLTU
   } alu_operator_e;
 
   typedef enum logic [6:0] {
