@@ -9,13 +9,11 @@ module panda_ex_stage (
   input  panda_pkg::id_ex_t  id_ex_i,
   output panda_pkg::ex_mem_t ex_mem_o,
 
-  output logic [31:0]        jump_target_o,
-  output logic [31:0]        branch_target_o,
-  output logic               branch_cond_o,
-
   input  logic [ 4:0]        rd_addr_i,
   input  logic               rd_we_i,
-  input  logic [31:0]        rd_data_i
+  input  logic [31:0]        rd_data_i,
+
+  output logic [31:0]        rd_data_ex_o
 );
   import panda_pkg::*;
 
@@ -30,15 +28,17 @@ module panda_ex_stage (
   logic [1:0] forward_rs1;
   logic [1:0] forward_rs2;
 
-  panda_forward_unit i_forward_unit (
-    .rs1_addr_i   (id_ex_i.rs1_addr),
-    .rs2_addr_i   (id_ex_i.rs2_addr),
-    .rd_addr_ex_i (ex_mem_o.rd_addr),
-    .rd_we_ex_i   (ex_mem_o.rd_we  ),
-    .rd_addr_mem_i(rd_addr_i       ),
-    .rd_we_mem_i  (rd_we_i         ),
-    .forward_rs1_o(forward_rs1     ),
-    .forward_rs2_o(forward_rs2     )
+  assign rd_data_ex_o = rd_data_ex;
+
+  panda_forward_ex i_forward_ex (
+    .id_ex_rs1_addr_i(id_ex_i.rs1_addr),
+    .id_ex_rs2_addr_i(id_ex_i.rs2_addr),
+    .ex_mem_rd_addr_i(ex_mem_o.rd_addr),
+    .ex_mem_rd_we_i  (ex_mem_o.rd_we  ),
+    .mem_wb_rd_addr_i(rd_addr_i       ),
+    .mem_wb_rd_we_i  (rd_we_i         ),
+    .forward_rs1_o   (forward_rs1     ),
+    .forward_rs2_o   (forward_rs2     )
   );
 
   always_comb begin : proc_forward
@@ -57,7 +57,7 @@ module panda_ex_stage (
     endcase
 
     unique case (forward_rs2)
-      2'b00   : rs2_data = id_ex_i.rs1_data;
+      2'b00   : rs2_data = id_ex_i.rs2_data;
       2'b01   : rs2_data = rd_data_ex;
       2'b10   : rs2_data = rd_data_i;
       default : rs2_data = id_ex_i.rs2_data;
@@ -81,21 +81,10 @@ module panda_ex_stage (
   panda_alu #(
     .Width(32)
   ) i_alu (
-    .operator_i   (id_ex_i.alu_operator),
-    .operand_a_i  (alu_operand_a       ),
-    .operand_b_i  (alu_operand_b       ),
-    .result_o     (alu_result          ),
-    .jump_target_o(jump_target_o       ),
-    .branch_cond_o(branch_cond_o       )
-  );
-
-  panda_adder #(
-    .Width(32)
-  ) i_adder_branch (
-    .operand_a_i(id_ex_i.pc     ),
-    .operand_b_i(id_ex_i.imm    ),
-    .subtract_i (1'b0           ),
-    .result_o   (branch_target_o)
+    .operator_i (id_ex_i.alu_operator),
+    .operand_a_i(alu_operand_a       ),
+    .operand_b_i(alu_operand_b       ),
+    .result_o   (alu_result          )
   );
 
   always_ff @(posedge clk_i or negedge rst_ni) begin : proc_ex_mem
