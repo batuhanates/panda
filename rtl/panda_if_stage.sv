@@ -13,10 +13,8 @@ module panda_if_stage (
   input  logic [31:0]       instr_rdata_i,
   output logic [31:0]       instr_addr_o,
 
-  input  logic              branch_i,
-  input  logic              jump_i,
-  input  logic [31:0]       branch_target_i,
-  input  logic [31:0]       jump_target_i
+  input  logic              change_flow_i,
+  input  logic [31:0]       jb_address_i
 );
   import panda_pkg::*;
 
@@ -26,15 +24,13 @@ module panda_if_stage (
   panda_pc #(
     .Width(32)
   ) i_pc (
-    .clk_i          (clk_i          ),
-    .rst_ni         (rst_ni         ),
-    .stall_i        (stall_i        ),
-    .branch_i       (branch_i       ),
-    .jump_i         (jump_i         ),
-    .branch_target_i(branch_target_i),
-    .jump_target_i  (jump_target_i  ),
-    .pc_o           (pc             ),
-    .pc_inc_o       (pc_inc         )
+    .clk_i           (clk_i            ),
+    .rst_ni          (rst_ni           ),
+    .stall_i         (stall_i | flush_i),
+    .change_flow_i   (change_flow_i    ),
+    .target_address_i(jb_address_i     ),
+    .pc_o            (pc               ),
+    .pc_inc_o        (pc_inc           )
   );
 
   always_ff @(posedge clk_i or negedge rst_ni) begin : proc_if_id
@@ -44,8 +40,8 @@ module panda_if_stage (
       if_id_o.pc_inc <= 0;
     end else if (~stall_i) begin
       if_id_o.instr  <= flush_i ? 32'h13 : instr_rdata_i; // Put NOP for flush
-      if_id_o.pc     <= pc;
-      if_id_o.pc_inc <= pc_inc;
+      if_id_o.pc     <= flush_i ? 0 : pc;
+      if_id_o.pc_inc <= flush_i ? 0 : pc_inc;
     end
   end
 
