@@ -3,18 +3,24 @@
 // Panda Core <https://github.com/batuhanates/panda>
 
 module panda_id_stage (
-  input  logic              clk_i,
-  input  logic              rst_ni,
-  input  logic              bubble_i,
+  input  logic                    clk_i,
+  input  logic                    rst_ni,
 
-  input  panda_pkg::if_id_t if_id_i,
-  output panda_pkg::id_ex_t id_ex_o,
+  input  panda_pkg::if_id_t       if_id_i,
+  output panda_pkg::id_ex_t       id_ex_o,
 
-  input  logic [31:0]       rd_data_i,
-  input  logic [ 4:0]       rd_addr_i,
-  input  logic              rd_we_i,
+  input  logic [31:0]             rd_data_i,
+  input  logic [ 4:0]             rd_addr_i,
+  input  logic                    rd_we_i,
 
-  output logic              load_use_hazard_o
+  input  panda_pkg::rd_data_sel_e ex_mem_rd_data_sel_i,
+  input  logic [ 4:0]             ex_mem_rd_addr_i,
+  input  logic                    ex_mem_rd_we_i,
+
+  input  logic [31:0]             rd_data_ex_i,
+
+  output logic                    stall_if_o,
+  output logic                    flush_if_o
 );
   import panda_pkg::*;
 
@@ -32,8 +38,27 @@ module panda_id_stage (
   logic          lsu_store;
   lsu_width_e    lsu_width;
   logic          lsu_load_unsigned;
-  logic          branch;
-  logic          jump;
+
+  logic jal;
+  logic jalr;
+  logic branch;
+  logic br_not;
+  logic br_unsigned;
+  logic br_lt;
+  logic change_flow;
+
+  logic [31:0] jb_address;
+
+  logic forward_rs1;
+  logic forward_rs2;
+
+  logic [31:0] rs1_data_tmp;
+  logic [31:0] rs2_data_tmp;
+
+  logic raw_hzd_bubble;
+  logic load_use_hazard_1;
+  logic load_use_hazard_2;
+  logic bubble_id;
 
   logic illegal_instr;
 
@@ -50,9 +75,13 @@ module panda_id_stage (
     .lsu_store_o        (lsu_store        ),
     .lsu_width_o        (lsu_width        ),
     .lsu_load_unsigned_o(lsu_load_unsigned),
-    .branch_o           (branch           ),
-    .jump_o             (jump             ),
     .imm_o              (imm              ),
+    .jal_o              (jal              ),
+    .jalr_o             (jalr             ),
+    .branch_o           (branch           ),
+    .br_not_o           (br_not           ),
+    .br_unsigned_o      (br_unsigned      ),
+    .br_lt_o            (br_lt            ),
     .illegal_instr_o    (illegal_instr    )
   );
 
@@ -60,19 +89,49 @@ module panda_id_stage (
     .Width(32),
     .Depth(32)
   ) i_register_file (
-    .clk_i     (clk_i    ),
-    .rst_ni    (rst_ni   ),
-    .rs1_addr_i(rs1_addr ),
-    .rs1_data_o(rs1_data ),
-    .rs2_addr_i(rs2_addr ),
-    .rs2_data_o(rs2_data ),
-    .rd_addr_i (rd_addr_i),
-    .rd_data_i (rd_data_i),
-    .rd_we_i   (rd_we_i  )
+    .clk_i     (clk_i       ),
+    .rst_ni    (rst_ni      ),
+    .rs1_addr_i(rs1_addr    ),
+    .rs1_data_o(rs1_data_tmp),
+    .rs2_addr_i(rs2_addr    ),
+    .rs2_data_o(rs2_data_tmp),
+    .rd_addr_i (rd_addr_i   ),
+    .rd_data_i (rd_data_i   ),
+    .rd_we_i   (rd_we_i     )
   );
 
+  panda_jump_branch_unit i_jump_branch_unit (
+    .rs1_data_i      (rs1_data   ),
+    .rs2_data_i      (rs2_data   ),
+    .imm_i           (imm        ),
+    .pc_i            (if_id_i.pc ),
+    .jal_i           (jal        ),
+    .jalr_i          (jalr       ),
+    .branch_i        (branch     ),
+    .br_not_i        (br_not     ),
+    .br_unsigned_i   (br_unsigned),
+    .br_lt_i         (br_lt      ),
+    .target_address_o(jb_address ),
+    .change_flow_o   (change_flow)
+  );
+
+  panda_forward_id i_forward_id (
+    .branch_i            (branch              ),
+    .jalr_i              (jalr                ),
+    .rs1_addr_i          (rs1_addr            ),
+    .rs2_addr_i          (rs2_addr            ),
+    .ex_mem_rd_data_sel_i(ex_mem_rd_data_sel_i),
+    .ex_mem_rd_addr_i    (ex_mem_rd_addr_i    ),
+    .ex_mem_rd_we_i      (ex_mem_rd_we_i      ),
+    .forward_rs1_o       (forward_rs1         ),
+    .forward_rs2_o       (forward_rs2         )
+  );
+
+  assign rs1_data = forward_rs1 ? rd_data_ex_i : rs1_data_tmp;
+  assign rs2_data = forward_rs2 ? rd_data_ex_i : rs2_data_tmp;
+
   always_ff @(posedge clk_i or negedge rst_ni) begin : proc_id_ex
-    if(~rst_ni | bubble_i) begin
+    if(~rst_ni | bubble_id) begin
       id_ex_o.op_a_sel          <= op_a_sel_e'(0);
       id_ex_o.op_b_sel          <= op_b_sel_e'(0);
       id_ex_o.alu_operator      <= alu_operator_e'(0);
@@ -87,8 +146,8 @@ module panda_id_stage (
       id_ex_o.lsu_store         <= 0;
       id_ex_o.lsu_width         <= lsu_width_e'(0);
       id_ex_o.lsu_load_unsigned <= 0;
-      id_ex_o.branch            <= 0;
-      id_ex_o.jump              <= 0;
+      id_ex_o.change_flow       <= 0;
+      id_ex_o.jb_address        <= 0;
       id_ex_o.pc                <= 0;
       id_ex_o.pc_inc            <= 0;
     end else begin
@@ -106,16 +165,28 @@ module panda_id_stage (
       id_ex_o.lsu_store         <= lsu_store;
       id_ex_o.lsu_width         <= lsu_width;
       id_ex_o.lsu_load_unsigned <= lsu_load_unsigned;
-      id_ex_o.branch            <= branch;
-      id_ex_o.jump              <= jump;
+      id_ex_o.change_flow       <= change_flow;
+      id_ex_o.jb_address        <= jb_address;
       id_ex_o.pc                <= if_id_i.pc;
       id_ex_o.pc_inc            <= if_id_i.pc_inc;
     end
   end
 
-  assign load_use_hazard_o = (id_ex_o.rd_data_sel == RD_DATA_LOAD) &
+  assign load_use_hazard_1 = (id_ex_o.rd_data_sel == RD_DATA_LOAD) &
     (rs1_addr == id_ex_o.rd_addr & op_a_sel == OP_A_RS1 |
       rs2_addr == id_ex_o.rd_addr & op_b_sel == OP_B_RS2) &
     (id_ex_o.rd_addr != 5'b0);
+
+  assign load_use_hazard_2 = (ex_mem_rd_data_sel_i == RD_DATA_LOAD) &
+    ((rs1_addr == ex_mem_rd_addr_i & (branch | jalr)) |
+      (rs2_addr == ex_mem_rd_addr_i & branch)) & (ex_mem_rd_addr_i != 5'b0);
+
+  assign raw_hzd_bubble = id_ex_o.rd_we & ((branch | jalr) &
+    (rs1_addr == id_ex_o.rd_addr) | (branch & rs2_addr == id_ex_o.rd_addr)) &
+  id_ex_o.rd_addr != 5'b0;
+
+  assign bubble_id  = load_use_hazard_1 | load_use_hazard_2 | raw_hzd_bubble;
+  assign stall_if_o = bubble_id;
+  assign flush_if_o = change_flow;
 
 endmodule
