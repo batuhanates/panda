@@ -55,9 +55,6 @@ module panda_id_stage (
   logic [31:0] rs1_data_tmp;
   logic [31:0] rs2_data_tmp;
 
-  logic raw_hzd_bubble;
-  logic load_use_hazard_1;
-  logic load_use_hazard_2;
   logic bubble_id;
 
   logic illegal_instr;
@@ -127,8 +124,27 @@ module panda_id_stage (
     .forward_rs2_o       (forward_rs2         )
   );
 
+  // MUXs for forwarding from EX/MEM
   assign rs1_data = forward_rs1 ? rd_data_ex_i : rs1_data_tmp;
   assign rs2_data = forward_rs2 ? rd_data_ex_i : rs2_data_tmp;
+
+  panda_controller i_controller (
+    .id_ex_rd_data_sel_i (id_ex_o.rd_data_sel ),
+    .id_ex_rd_addr_i     (id_ex_o.rd_addr     ),
+    .id_ex_rd_we_i       (id_ex_o.rd_we       ),
+    .ex_mem_rd_data_sel_i(ex_mem_rd_data_sel_i),
+    .ex_mem_rd_addr_i    (ex_mem_rd_addr_i    ),
+    .op_a_sel_i          (op_a_sel            ),
+    .op_b_sel_i          (op_b_sel            ),
+    .branch_i            (branch              ),
+    .jalr_i              (jalr                ),
+    .rs1_addr_i          (rs1_addr            ),
+    .rs2_addr_i          (rs2_addr            ),
+    .bubble_id_o         (bubble_id           )
+  );
+
+  assign stall_if_o = bubble_id;
+  assign flush_if_o = change_flow;
 
   always_ff @(posedge clk_i or negedge rst_ni) begin : proc_id_ex
     if(~rst_ni | bubble_id) begin
@@ -171,22 +187,5 @@ module panda_id_stage (
       id_ex_o.pc_inc            <= if_id_i.pc_inc;
     end
   end
-
-  assign load_use_hazard_1 = (id_ex_o.rd_data_sel == RD_DATA_LOAD) &
-    (rs1_addr == id_ex_o.rd_addr & op_a_sel == OP_A_RS1 |
-      rs2_addr == id_ex_o.rd_addr & op_b_sel == OP_B_RS2) &
-    (id_ex_o.rd_addr != 5'b0);
-
-  assign load_use_hazard_2 = (ex_mem_rd_data_sel_i == RD_DATA_LOAD) &
-    ((rs1_addr == ex_mem_rd_addr_i & (branch | jalr)) |
-      (rs2_addr == ex_mem_rd_addr_i & branch)) & (ex_mem_rd_addr_i != 5'b0);
-
-  assign raw_hzd_bubble = id_ex_o.rd_we & ((branch | jalr) &
-    (rs1_addr == id_ex_o.rd_addr) | (branch & rs2_addr == id_ex_o.rd_addr)) &
-  id_ex_o.rd_addr != 5'b0;
-
-  assign bubble_id  = load_use_hazard_1 | load_use_hazard_2 | raw_hzd_bubble;
-  assign stall_if_o = bubble_id;
-  assign flush_if_o = change_flow;
 
 endmodule
