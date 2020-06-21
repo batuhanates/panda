@@ -36,8 +36,11 @@ module panda_forward_ex (
   assign nz_mem_wb   = mem_wb_rd_addr_i != 5'b0;
 
   assign forward_rs1_o[0] = eq_ex_mem_1 & nz_ex_mem & ex_mem_rd_we_i;
-  assign forward_rs1_o[1] = eq_mem_wb_1 & nz_mem_wb & mem_wb_rd_we_i & ~eq_ex_mem_1;
+  assign forward_rs1_o[1] = eq_mem_wb_1 & nz_mem_wb & mem_wb_rd_we_i &
+    ~forward_rs1_o[0];
+
   assign forward_rs2_o[0] = eq_ex_mem_2 & nz_ex_mem & ex_mem_rd_we_i;
-  assign forward_rs2_o[1] = eq_mem_wb_2 & nz_mem_wb & mem_wb_rd_we_i & ~eq_ex_mem_2;
+  assign forward_rs2_o[1] = eq_mem_wb_2 & nz_mem_wb & mem_wb_rd_we_i &
+    ~forward_rs2_o[0];
 
 endmodule
