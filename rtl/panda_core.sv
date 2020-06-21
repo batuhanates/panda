@@ -24,8 +24,6 @@ module panda_core (
   logic [31:0] rd_data;
   logic [31:0] rd_data_ex;
 
-  logic load_use_hazard;
-
   logic stall_if;
   logic flush_if;
 
