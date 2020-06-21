@@ -2,6 +2,11 @@
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // Panda Core <https://github.com/batuhanates/panda>
 
+/**
+* EX stage forward unit
+*
+* Controls forwarding in EX stage for RAW hazards
+*/
 module panda_forward_ex (
   input  logic [4:0] id_ex_rs1_addr_i,
   input  logic [4:0] id_ex_rs2_addr_i,

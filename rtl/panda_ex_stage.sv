@@ -9,10 +9,12 @@ module panda_ex_stage (
   input  panda_pkg::id_ex_t  id_ex_i,
   output panda_pkg::ex_mem_t ex_mem_o,
 
+  // Inputs from WB stage
   input  logic [ 4:0]        rd_addr_i,
   input  logic               rd_we_i,
   input  logic [31:0]        rd_data_i,
 
+  // Send to ID stage for forwarding
   output logic [31:0]        rd_data_ex_o
 );
   import panda_pkg::*;

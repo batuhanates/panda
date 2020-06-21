@@ -13,10 +13,11 @@ module panda_id_stage (
   input  logic [ 4:0]             rd_addr_i,
   input  logic                    rd_we_i,
 
+  // Inputs for hazard detection
   input  panda_pkg::rd_data_sel_e ex_mem_rd_data_sel_i,
   input  logic [ 4:0]             ex_mem_rd_addr_i,
   input  logic                    ex_mem_rd_we_i,
-
+  // Input for forwarding
   input  logic [31:0]             rd_data_ex_i,
 
   output logic                    stall_if_o,

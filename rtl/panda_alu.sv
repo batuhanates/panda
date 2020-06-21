@@ -47,6 +47,7 @@ module panda_alu #(
 
   assign cmp_signed = operator_i == ALU_SLT;
 
+  // is_equal is not used.
   panda_comparator_sub #(
     .Width(Width)
   ) i_comparator (

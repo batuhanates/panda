@@ -33,6 +33,7 @@ module panda_register_file #(
   assign we_tmp = ({{Depth-1{1'b0}}, 1'b1} << rd_addr_i) & {Depth{rd_we_i}};
   assign we     = {we_tmp[Depth-1:1], 1'b0};
 
+  // Check we signals for write-first operation. we[0] is always 0.
   assign rs1_data_o = we[rs1_addr_i] ? rd_data_i : registers[rs1_addr_i];
   assign rs2_data_o = we[rs2_addr_i] ? rd_data_i : registers[rs2_addr_i];
 

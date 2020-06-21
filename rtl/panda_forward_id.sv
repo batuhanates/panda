@@ -2,6 +2,11 @@
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // Panda Core <https://github.com/batuhanates/panda>
 
+/**
+* ID stage forward unit
+*
+* Controls forwarding in ID stage for RAW hazards
+*/
 module panda_forward_id (
   input  logic                    branch_i,
   input  logic                    jalr_i,

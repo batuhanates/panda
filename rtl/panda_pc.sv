@@ -22,6 +22,7 @@ module panda_pc #(
   assign pc_o     = pc_tmp;
   assign pc_inc_o = pc_inc;
 
+  // Bypass pc if there is a jump or branch operation
   assign pc_tmp = change_flow_i ? target_address_i : pc;
 
   always_ff @(posedge clk_i or negedge rst_ni) begin : proc_pc

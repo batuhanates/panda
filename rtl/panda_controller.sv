@@ -56,16 +56,16 @@ module panda_controller (
   assign nz_ex_mem   = ex_mem_rd_addr_i != 5'b0;
   assign br_or_jalr  = branch_i | jalr_i;
 
-
+  // Is there a load instruction in ID/EX register which requires stalling?
   assign load_use_hazard_1 = load_id_ex & nz_id_ex &
     ((eq_id_ex_1 & rs1_used) | (eq_id_ex_2 & rs2_used));
 
+  // Is there a load instruction in EX/MEM register which requires stalling?
   assign load_use_hazard_2 = load_ex_mem & nz_ex_mem &
     ((eq_ex_mem_1 & br_or_jalr) | (eq_ex_mem_2 & branch_i));
 
   assign raw_hazard = id_ex_rd_we_i & nz_id_ex &
     ((eq_id_ex_1 & br_or_jalr) | (eq_id_ex_2 & branch_i));
-
 
   assign bubble_id_o = load_use_hazard_1 | load_use_hazard_2 | raw_hazard;
 

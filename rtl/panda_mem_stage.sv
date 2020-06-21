@@ -21,10 +21,10 @@ module panda_mem_stage (
 
   logic mem_to_mem_copy;
 
+  // Check for memory to memory copy
   assign mem_to_mem_copy = ex_mem_i.rs2_addr == mem_wb_o.rd_addr & mem_wb_o.rd_we
     & mem_wb_o.rd_addr != 5'b0 & mem_wb_o.rd_data_sel == RD_DATA_LOAD;
 
-  // Check for memory to memory copy
   always_comb begin
     if (mem_to_mem_copy) begin
       store_data = mem_wb_o.load_data;

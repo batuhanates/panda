@@ -16,6 +16,7 @@ module panda_core (
 );
   import panda_pkg::*;
 
+  // Pipeline registers
   if_id_t  if_id;
   id_ex_t  id_ex;
   ex_mem_t ex_mem;

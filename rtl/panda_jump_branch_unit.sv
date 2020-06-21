@@ -2,6 +2,11 @@
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // Panda Core <https://github.com/batuhanates/panda>
 
+/**
+* Jump-Branch Unit
+*
+* Calculates target address and branch condition.
+*/
 module panda_jump_branch_unit (
   input  logic [31:0] rs1_data_i,
   input  logic [31:0] rs2_data_i,
@@ -27,10 +32,16 @@ module panda_jump_branch_unit (
   logic [31:0] address_operand;
   logic [31:0] target_address_tmp;
 
-  assign br_cond       = (br_lt_i ? is_less : is_equal) ^ br_not_i;
+  // Select between (<) and (==) then negate for (>=) or (!=)
+  assign br_cond = (br_lt_i ? is_less : is_equal) ^ br_not_i;
+
   assign change_flow_o = jal_i | jalr_i | (branch_i & br_cond);
 
-  assign address_operand  = jalr_i ? rs1_data_i : pc_i;
+  // Select rs1 or pc for address calculation
+  assign address_operand = jalr_i ? rs1_data_i : pc_i;
+
+  // Set the least significant bit to 0. This is required for jalr but does not
+  // alter jal or branch adresses since that bit is already 0.
   assign target_address_o = {target_address_tmp[31:1], 1'b0};
 
   panda_adder #(
