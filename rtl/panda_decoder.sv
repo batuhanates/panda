@@ -16,10 +16,15 @@ module panda_decoder (
   output logic                     lsu_store_o,
   output panda_pkg::lsu_width_e    lsu_width_o,
   output logic                     lsu_load_unsigned_o,
-
-  output logic                     branch_o,
-  output logic                     jump_o,
   output logic [31:0]              imm_o,
+
+  output logic                     jal_o,
+  output logic                     jalr_o,
+  output logic                     branch_o,
+  output logic                     br_not_o,
+  output logic                     br_unsigned_o,
+  output logic                     br_lt_o,
+
   output logic                     illegal_instr_o
 );
   import panda_pkg::*;
@@ -63,14 +68,17 @@ module panda_decoder (
   assign lsu_width_o         = lsu_width_e'(funct3[1:0]);
   assign lsu_load_unsigned_o = funct3[2];
 
+  assign {br_lt_o, br_unsigned_o, br_not_o} = funct3;
+
   always_comb begin : proc_decode
     rd_we_o     = 1'b0;
     lsu_store_o = 1'b0;
+    jal_o       = 1'b0;
+    jalr_o      = 1'b0;
     branch_o    = 1'b0;
-    jump_o      = 1'b0;
 
-    op_a_sel_o     = OP_A_RS1;
-    op_b_sel_o     = OP_B_RS2;
+    op_a_sel_o     = OP_A_PC;
+    op_b_sel_o     = OP_B_IMM;
     rd_data_sel_o  = RD_DATA_ALU;
     alu_operator_o = ALU_ADD;
     imm_sel        = IMM_I;
@@ -95,8 +103,8 @@ module panda_decoder (
 
         unique case (funct3)
           3'b000 : alu_operator_o = ALU_ADD;
-          3'b010 : alu_operator_o = ALU_LT;
-          3'b011 : alu_operator_o = ALU_LTU;
+          3'b010 : alu_operator_o = ALU_SLT;
+          3'b011 : alu_operator_o = ALU_SLTU;
           3'b100 : alu_operator_o = ALU_XOR;
           3'b110 : alu_operator_o = ALU_OR;
           3'b111 : alu_operator_o = ALU_AND;
@@ -143,8 +151,8 @@ module panda_decoder (
           {7'b000_0000, 3'b000} : alu_operator_o = ALU_ADD;
           {7'b010_0000, 3'b000} : alu_operator_o = ALU_SUB;
           {7'b000_0000, 3'b001} : alu_operator_o = ALU_SLL;
-          {7'b000_0000, 3'b010} : alu_operator_o = ALU_LT;
-          {7'b000_0000, 3'b011} : alu_operator_o = ALU_LTU;
+          {7'b000_0000, 3'b010} : alu_operator_o = ALU_SLT;
+          {7'b000_0000, 3'b011} : alu_operator_o = ALU_SLTU;
           {7'b000_0000, 3'b100} : alu_operator_o = ALU_XOR;
           {7'b000_0000, 3'b101} : alu_operator_o = ALU_SRL;
           {7'b010_0000, 3'b101} : alu_operator_o = ALU_SRA;
@@ -161,40 +169,25 @@ module panda_decoder (
       end
 
       OPCODE_BRANCH : begin
-        op_a_sel_o = OP_A_RS1;
-        op_b_sel_o = OP_B_RS2;
         imm_sel    = IMM_B;
         branch_o   = 1'b1;
-
-        unique case (funct3)
-          3'b000  : alu_operator_o = ALU_EQ;
-          3'b001  : alu_operator_o = ALU_NE;
-          3'b100  : alu_operator_o = ALU_LT;
-          3'b101  : alu_operator_o = ALU_GE;
-          3'b110  : alu_operator_o = ALU_LTU;
-          3'b111  : alu_operator_o = ALU_GEU;
-          default : illegal_instr_o = 1'b1;
-        endcase
+        op_a_sel_o = OP_A_RS1;
+        op_b_sel_o = OP_B_RS2;
       end
 
       OPCODE_JALR : begin
-        op_a_sel_o     = OP_A_RS1;
-        op_b_sel_o     = OP_B_IMM;
-        alu_operator_o = ALU_ADD;
-        rd_data_sel_o  = RD_DATA_PC_INC;
-        rd_we_o        = 1'b1;
-        imm_sel        = IMM_I;
-        jump_o         = 1'b1;
+        rd_data_sel_o = RD_DATA_PC_INC;
+        rd_we_o       = 1'b1;
+        imm_sel       = IMM_I;
+        jalr_o        = 1'b1;
+        op_a_sel_o    = OP_A_RS1;
       end
 
       OPCODE_JAL : begin
-        op_a_sel_o     = OP_A_PC;
-        op_b_sel_o     = OP_B_IMM;
-        alu_operator_o = ALU_ADD;
-        rd_data_sel_o  = RD_DATA_PC_INC;
-        rd_we_o        = 1'b1;
-        imm_sel        = IMM_J;
-        jump_o         = 1'b1;
+        rd_data_sel_o = RD_DATA_PC_INC;
+        rd_we_o       = 1'b1;
+        imm_sel       = IMM_J;
+        jal_o         = 1'b1;
       end
 
       default : illegal_instr_o = 1'b1;

@@ -17,13 +17,28 @@ module panda_mem_stage (
   import panda_pkg::*;
 
   logic [31:0] load_data;
+  logic [31:0] store_data;
+
+  logic mem_to_mem_copy;
+
+  // Check for memory to memory copy
+  assign mem_to_mem_copy = ex_mem_i.rs2_addr == mem_wb_o.rd_addr & mem_wb_o.rd_we
+    & mem_wb_o.rd_addr != 5'b0 & mem_wb_o.rd_data_sel == RD_DATA_LOAD;
+
+  always_comb begin
+    if (mem_to_mem_copy) begin
+      store_data = mem_wb_o.load_data;
+    end else begin
+      store_data = ex_mem_i.rs2_data;
+    end
+  end
 
   panda_lsu i_lsu (
     .store_i        (ex_mem_i.lsu_store        ),
     .load_unsigned_i(ex_mem_i.lsu_load_unsigned),
     .width_i        (ex_mem_i.lsu_width        ),
     .addr_i         (ex_mem_i.alu_result       ),
-    .store_data_i   (ex_mem_i.rs2_data         ),
+    .store_data_i   (store_data                ),
     .load_data_o    (load_data                 ),
     .data_rdata_i   (data_rdata_i              ),
     .data_wdata_o   (data_wdata_o              ),

@@ -35,7 +35,7 @@ module panda_alu_tb ();
     operand_a = 0;
     operand_b = 0;
     for (int i = 0; i < 6; i++) begin
-      for (int k = 0; k < 14; k++) begin
+      for (int k = 0; k < operator.num(); k++) begin
         #5 operator = operator.next();
         operand_a = list_a[i];
         operand_b = list_b[i];

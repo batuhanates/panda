@@ -7,27 +7,28 @@ module panda_pc #(
 ) (
   input  logic             clk_i,
   input  logic             rst_ni,
-  input  logic             branch_i,
-  input  logic             jump_i,
-  input  logic [Width-1:0] branch_target_i,
-  input  logic [Width-1:0] jump_target_i,
+  input  logic             stall_i,
+
+  input  logic             change_flow_i,
+  input  logic [Width-1:0] target_address_i,
   output logic [Width-1:0] pc_o,
   output logic [Width-1:0] pc_inc_o
 );
 
   logic [Width-1:0] pc;
-  logic [Width-1:0] pc_temp;
+  logic [Width-1:0] pc_tmp;
   logic [Width-1:0] pc_inc;
 
-  assign pc_o     = pc_temp;
+  assign pc_o     = pc_tmp;
   assign pc_inc_o = pc_inc;
 
-  assign pc_temp = jump_i ? jump_target_i : (branch_i ? branch_target_i : pc);
+  // Bypass pc if there is a jump or branch operation
+  assign pc_tmp = change_flow_i ? target_address_i : pc;
 
   always_ff @(posedge clk_i or negedge rst_ni) begin : proc_pc
     if(~rst_ni) begin
       pc <= 0;
-    end else begin
+    end else if (~stall_i) begin
       pc <= pc_inc;
     end
   end
@@ -35,7 +36,7 @@ module panda_pc #(
   panda_adder #(
     .Width(Width)
   ) i_adder_inc (
-    .operand_a_i(pc_temp  ),
+    .operand_a_i(pc_tmp   ),
     .operand_b_i(Width'(4)),
     .subtract_i (1'b0     ),
     .result_o   (pc_inc   )

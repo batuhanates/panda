@@ -16,12 +16,8 @@ package panda_pkg;
     ALU_SRL,
     ALU_SRA,
 
-    ALU_EQ,
-    ALU_NE,
-    ALU_LT,
-    ALU_LTU,
-    ALU_GE,
-    ALU_GEU
+    ALU_SLT,
+    ALU_SLTU
   } alu_operator_e;
 
   typedef enum logic [6:0] {
@@ -86,14 +82,16 @@ package panda_pkg;
     logic [31:0]   imm;
     logic [31:0]   rs1_data;
     logic [31:0]   rs2_data;
+    logic [ 4:0]   rs1_addr;
+    logic [ 4:0]   rs2_addr;
     rd_data_sel_e  rd_data_sel;
     logic [ 4:0]   rd_addr;
     logic          rd_we;
     logic          lsu_store;
     lsu_width_e    lsu_width;
     logic          lsu_load_unsigned;
-    logic          branch;
-    logic          jump;
+    logic          change_flow;
+    logic [31:0]   jb_address;
     logic [31:0]   pc;
     logic [31:0]   pc_inc;
   } id_ex_t;
@@ -106,6 +104,7 @@ package panda_pkg;
     logic [31:0]  alu_result;
     logic [31:0]  imm;
     logic [31:0]  rs2_data;
+    logic [ 4:0]  rs2_addr;
     rd_data_sel_e rd_data_sel;
     logic [ 4:0]  rd_addr;
     logic         rd_we;
