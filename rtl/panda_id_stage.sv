@@ -53,6 +53,7 @@ module panda_id_stage (
   logic forward_rs1;
   logic forward_rs2;
 
+  // Data read from register file
   logic [31:0] rs1_data_tmp;
   logic [31:0] rs2_data_tmp;
 
@@ -144,8 +145,8 @@ module panda_id_stage (
     .bubble_id_o         (bubble_id           )
   );
 
-  assign stall_if_o = bubble_id;
-  assign flush_if_o = change_flow;
+  assign stall_if_o = bubble_id;   // Stall IF/ID when inserting a bubble
+  assign flush_if_o = change_flow; // Flush IF/ID if the flow is changing
 
   always_ff @(posedge clk_i or negedge rst_ni) begin : proc_id_ex
     if(~rst_ni | bubble_id) begin

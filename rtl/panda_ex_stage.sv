@@ -43,6 +43,7 @@ module panda_ex_stage (
     .forward_rs2_o   (forward_rs2     )
   );
 
+  // Select register data from ID/EX or forwarded
   always_comb begin : proc_forward
     unique case (ex_mem_o.rd_data_sel)
       RD_DATA_ALU    : rd_data_ex = ex_mem_o.alu_result;
@@ -66,6 +67,7 @@ module panda_ex_stage (
     endcase
   end
 
+  // Select ALU operands
   always_comb begin : proc_alu_operands
     unique case (id_ex_i.op_a_sel)
       OP_A_RS1 : alu_operand_a = rs1_data;

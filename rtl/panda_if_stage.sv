@@ -33,6 +33,10 @@ module panda_if_stage (
     .pc_inc_o        (pc_inc           )
   );
 
+  // Stall has priority over flush. If they are both asserted in the same cycle,
+  // the registers will keep their values and will NOT be flushed.
+  // For flushing 32'h13 is put as instruction instead of completely reseting in
+  // order to avoid putting an intruction with an illegal opcode.
   always_ff @(posedge clk_i or negedge rst_ni) begin : proc_if_id
     if(~rst_ni) begin
       if_id_o.instr  <= 0;

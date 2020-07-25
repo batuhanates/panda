@@ -24,6 +24,7 @@ module panda_ram #(
 
   assign mem_rdata = mem[addr_i];
 
+  // Use a primitive output register or connect the output directly
   if (OutputReg) begin
     always_ff @(posedge clk_i) begin
       if (ce_i) begin
@@ -35,6 +36,7 @@ module panda_ram #(
   end
 
   // Determine write input according to byte-wide write enable
+  // If write enable is 0, then write the same value in that element
   for (genvar i = 0; i < DataWidth/8; i++) begin
     assign mem_wdata[i*8+:8] = we_i[i] ? data_i[i*8+:8] : mem_rdata[i*8+:8];
   end
@@ -45,6 +47,7 @@ module panda_ram #(
     end
   end
 
+  // Initialize the memory from a hex file unless the file name is empty
   if (InitFile != "") begin
     initial begin
       $display("Initializing RAM from %s", InitFile);

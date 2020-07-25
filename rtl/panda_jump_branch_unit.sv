@@ -35,6 +35,7 @@ module panda_jump_branch_unit (
   // Select between (<) and (==) then negate for (>=) or (!=)
   assign br_cond = (br_lt_i ? is_less : is_equal) ^ br_not_i;
 
+  // Change flow if there is a jump or branch taken
   assign change_flow_o = jal_i | jalr_i | (branch_i & br_cond);
 
   // Select rs1 or pc for address calculation

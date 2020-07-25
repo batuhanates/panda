@@ -44,16 +44,19 @@ module panda_decoder (
   assign funct3 = instr_i[14:12];
   assign funct7 = instr_i[31:25];
 
+  // Register addresses are fixed in the instruction
   assign rs1_addr_o = instr_i[19:15];
   assign rs2_addr_o = instr_i[24:20];
   assign rd_addr_o  = instr_i[11:7];
 
+  // All the immediate types
   assign imm_i_type = {{21{instr_i[31]}}, instr_i[30:20]};
   assign imm_s_type = {{21{instr_i[31]}}, instr_i[30:25], instr_i[11:7]};
   assign imm_b_type = {{20{instr_i[31]}}, instr_i[7], instr_i[30:25], instr_i[11:8], 1'b0};
   assign imm_u_type = {instr_i[31:12], 12'b0};
   assign imm_j_type = {{12{instr_i[31]}}, instr_i[19:12], instr_i[20], instr_i[30:21], 1'b0};
 
+  // Select the required immediate type depending on the instruction
   always_comb begin : proc_imm_mux
     unique case (imm_sel)
       IMM_I   : imm_o = imm_i_type;
@@ -65,9 +68,11 @@ module panda_decoder (
     endcase
   end
 
+  // Load/Store width and signed/unsigned load flags are kept in funct3 section
   assign lsu_width_o         = lsu_width_e'(funct3[1:0]);
   assign lsu_load_unsigned_o = funct3[2];
 
+  // Control signals to choose which branch comparison to use
   assign {br_lt_o, br_unsigned_o, br_not_o} = funct3;
 
   always_comb begin : proc_decode
@@ -83,7 +88,7 @@ module panda_decoder (
     alu_operator_o = ALU_ADD;
     imm_sel        = IMM_I;
 
-    illegal_instr_o = 1'b0;
+    illegal_instr_o = 1'b0; // Unused for now
 
     unique case (opcode)
       OPCODE_LOAD : begin
@@ -102,21 +107,21 @@ module panda_decoder (
         rd_we_o       = 1'b1;
 
         unique case (funct3)
-          3'b000 : alu_operator_o = ALU_ADD;
-          3'b010 : alu_operator_o = ALU_SLT;
-          3'b011 : alu_operator_o = ALU_SLTU;
-          3'b100 : alu_operator_o = ALU_XOR;
-          3'b110 : alu_operator_o = ALU_OR;
-          3'b111 : alu_operator_o = ALU_AND;
+          3'b000 : alu_operator_o = ALU_ADD;  // Addition
+          3'b010 : alu_operator_o = ALU_SLT;  // Set Less Then
+          3'b011 : alu_operator_o = ALU_SLTU; // Set Less Than Unsigned
+          3'b100 : alu_operator_o = ALU_XOR;  // XOR
+          3'b110 : alu_operator_o = ALU_OR;   // OR
+          3'b111 : alu_operator_o = ALU_AND;  // AND
           3'b001 : if (funct7 == 7'b000_0000) begin
-            alu_operator_o = ALU_SLL;
+            alu_operator_o = ALU_SLL; // Shift Left
           end else begin
             illegal_instr_o = 1'b1;
           end
           3'b101 : if (funct7 == 7'b000_0000) begin
-            alu_operator_o = ALU_SRL;
+            alu_operator_o = ALU_SRL; // Shift Right Logical
           end else if (funct7 == 7'b010_0000) begin
-            alu_operator_o = ALU_SRA;
+            alu_operator_o = ALU_SRA; // Shift Right Arithmetic
           end else begin
             illegal_instr_o = 1'b1;
           end
@@ -148,16 +153,16 @@ module panda_decoder (
         rd_we_o       = 1'b1;
 
         unique case ({funct7, funct3})
-          {7'b000_0000, 3'b000} : alu_operator_o = ALU_ADD;
-          {7'b010_0000, 3'b000} : alu_operator_o = ALU_SUB;
-          {7'b000_0000, 3'b001} : alu_operator_o = ALU_SLL;
-          {7'b000_0000, 3'b010} : alu_operator_o = ALU_SLT;
-          {7'b000_0000, 3'b011} : alu_operator_o = ALU_SLTU;
-          {7'b000_0000, 3'b100} : alu_operator_o = ALU_XOR;
-          {7'b000_0000, 3'b101} : alu_operator_o = ALU_SRL;
-          {7'b010_0000, 3'b101} : alu_operator_o = ALU_SRA;
-          {7'b000_0000, 3'b110} : alu_operator_o = ALU_OR;
-          {7'b000_0000, 3'b111} : alu_operator_o = ALU_AND;
+          {7'b000_0000, 3'b000} : alu_operator_o = ALU_ADD;  // Addition
+          {7'b010_0000, 3'b000} : alu_operator_o = ALU_SUB;  // Subtrction
+          {7'b000_0000, 3'b001} : alu_operator_o = ALU_SLL;  // Shift Left
+          {7'b000_0000, 3'b010} : alu_operator_o = ALU_SLT;  // Set Less Than
+          {7'b000_0000, 3'b011} : alu_operator_o = ALU_SLTU; // SLT Unsigned
+          {7'b000_0000, 3'b100} : alu_operator_o = ALU_XOR;  // XOR
+          {7'b000_0000, 3'b101} : alu_operator_o = ALU_SRL;  // Shift Right Logic
+          {7'b010_0000, 3'b101} : alu_operator_o = ALU_SRA;  // Shift Right Arith
+          {7'b000_0000, 3'b110} : alu_operator_o = ALU_OR;   // OR
+          {7'b000_0000, 3'b111} : alu_operator_o = ALU_AND;  // AND
           default : illegal_instr_o = 1'b1;
         endcase
       end

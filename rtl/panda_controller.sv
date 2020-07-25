@@ -26,22 +26,22 @@ module panda_controller (
 );
   import panda_pkg::*;
 
-  logic load_use_hazard_1; // Load instruction currently at EX stage
-  logic load_use_hazard_2; // Load instruction currently at MEM stage
+  logic load_use_hazard_1; // Hazard with load at EX stage
+  logic load_use_hazard_2; // Hazard with load at MEM stage
   logic raw_hazard;        // RAW hazard for branch or jalr
 
-  logic load_id_ex;
-  logic eq_id_ex_1;
-  logic eq_id_ex_2;
-  logic nz_id_ex;
-  logic rs1_used;
-  logic rs2_used;
+  logic load_id_ex; // Load instruction is currently at EX stage
+  logic eq_id_ex_1; // rs1_addr is same in ID and ID/EX
+  logic eq_id_ex_2; // rs2_addr is same in ID and ID/EX
+  logic nz_id_ex;   // rd_addr is not zero in ID/EX
+  logic rs1_used;   // rs1 is used in ID
+  logic rs2_used;   // rs2 is used in ID
 
-  logic load_ex_mem;
-  logic eq_ex_mem_1;
-  logic eq_ex_mem_2;
-  logic nz_ex_mem;
-  logic br_or_jalr;
+  logic load_ex_mem; // Load instruction is currently at MEM stage
+  logic eq_ex_mem_1; // rs1_addr is same in ID and EX/MEM
+  logic eq_ex_mem_2; // rs2_addr is same in ID and EX/MEM
+  logic nz_ex_mem;   // rd_addr is not zero in EX/MEM
+  logic br_or_jalr;  // There is a branch or jalr instruction in ID
 
   assign load_id_ex = id_ex_rd_data_sel_i == RD_DATA_LOAD;
   assign eq_id_ex_1 = rs1_addr_i == id_ex_rd_addr_i;
