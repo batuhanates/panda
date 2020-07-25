@@ -16,9 +16,11 @@ module panda_ram_tb ();
   logic [    DataWidth-1:0] data_o;
 
   panda_ram #(
-    .DataWidth(DataWidth),
-    .Depth    (Depth    ),
-    .InitFile (InitFile )
+    .DataWidth (DataWidth),
+    .Depth     (Depth    ),
+    .OutputReg (1'b0     ),
+    .WriteFirst(1'b0     ),
+    .InitFile  (InitFile )
   ) dut (
     .clk_i (clk_i ),
     .ce_i  (ce_i  ),
@@ -36,8 +38,8 @@ module panda_ram_tb ();
     addr_i = 5'd0;
     data_i = 32'b0;
     #10 ce_i = 1'b1;
-    #10 $monitor("addr_i:0x%h",  addr_i);
-    $monitor("data_o:0x%h", data_o);
+    #10 $monitor("addr_i:h%h", addr_i);
+    $monitor("data_o:h%h", data_o);
     for (int i = 0; i < 36; i++) begin
       #10 addr_i = i;
     end
